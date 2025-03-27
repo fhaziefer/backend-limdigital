@@ -83,10 +83,10 @@ src/
 
 ## Tim Pengembang
 
-- **Project Manager**: Yusuf Fadlulloh Abdurrohman
-- **Backend Developer**: Yusuf Fadlulloh Abdurrohman
-- **Database Administrator**: Yusuf Fadlulloh Abdurrohman
-- **DevOps Engineer**: Yusuf Fadlulloh Abdurrohman
+- **Project Manager**: [Yusuf Fadlulloh Abdurrohman](https://www.instagram.com/fadlulloh.abdurrohman/)
+- **Backend Developer**: [Yusuf Fadlulloh Abdurrohman](https://www.instagram.com/fadlulloh.abdurrohman/)
+- **Database Administrator**: [Yusuf Fadlulloh Abdurrohman](https://www.instagram.com/fadlulloh.abdurrohman/)
+- **DevOps Engineer**: [Yusuf Fadlulloh Abdurrohman](https://www.instagram.com/fadlulloh.abdurrohman/)
 
 ## Lisensi
 
