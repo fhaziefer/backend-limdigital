@@ -83,10 +83,10 @@ src/
 
 ## Tim Pengembang
 
-- **Project Manager**: [Nama PM]
-- **Backend Developer**: [Nama Developer]
-- **Database Administrator**: [Nama DBA]
-- **DevOps Engineer**: [Nama DevOps]
+- **Project Manager**: Yusuf Fadlulloh Abdurrohman
+- **Backend Developer**: Yusuf Fadlulloh Abdurrohman
+- **Database Administrator**: Yusuf Fadlulloh Abdurrohman
+- **DevOps Engineer**: Yusuf Fadlulloh Abdurrohman
 
 ## Lisensi
 
