@@ -22,16 +22,6 @@ export class AuthController {
         @Req() req: Request,
     ) {
         const clientInfo = this.extractClientInfo(req);
-
-        // Tampilkan client info di terminal
-        console.log('Client Info:', {
-            ipAddress: clientInfo.ipAddress,
-            userAgent: clientInfo.userAgent,
-            deviceType: clientInfo.deviceType,
-            browser: clientInfo.browser,
-            os: clientInfo.os
-        });
-
         const result = await this.authService.login(request, clientInfo);
         return WebResponseBuilder.success(result, 'Login successful');
     }
