@@ -144,15 +144,18 @@ model Session {
   userId       String   @db.VarChar(36)
   ipAddress    String?  @db.VarChar(45)
   userAgent    String?  @db.VarChar(255)
-  deviceInfo   String?  @db.VarChar(255)
-  location     String?  @db.VarChar(100)
+  deviceType   String?  @db.VarChar(255)
+  browser      String?  @db.VarChar(100)
+  os           String?  @db.VarChar(100)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   expiresAt    DateTime
   lastActivity DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([sessionToken])
   @@map("sessions")
 }
 

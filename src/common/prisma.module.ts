@@ -1,48 +1,43 @@
-import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
-import { PrismaClient, Prisma } from "@prisma/client";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
+// src/common/prisma.module.ts
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @Injectable()
-export class PrismaService
-    extends PrismaClient<
-        Prisma.PrismaClientOptions, string>
-    implements OnModuleInit {
+export class PrismaService extends PrismaClient implements OnModuleInit {
     constructor(
-        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    ) {
         super({
             log: [
-                {
-                    emit: 'event',
-                    level: 'info'
-                },
-                {
-                    emit: 'event',
-                    level: 'warn'
-                },
-                {
-                    emit: 'event',
-                    level: 'error'
-                },
-                {
-                    emit: 'event',
-                    level: 'query'
-                },
-            ]
-        })
+                { emit: 'event', level: 'query' },
+                { emit: 'event', level: 'error' },
+                { emit: 'event', level: 'info' },
+                { emit: 'event', level: 'warn' },
+            ],
+        });
     }
-    onModuleInit() {
-        this.$on('info', (e) => {
-            this.logger.info(e)
+
+    async onModuleInit() {
+        await this.$connect();
+
+        this.$on('query' as never, (e: any) => {
+            this.logger.debug('Query: ' + e.query);
+            this.logger.debug('Params: ' + e.params);
+            this.logger.debug('Duration: ' + e.duration + 'ms');
         });
-        this.$on('warn', (e) => {
-            this.logger.warn(e)
+
+        this.$on('error' as never, (e: any) => {
+            this.logger.error('Error: ' + e.message);
         });
-        this.$on('error', (e) => {
-            this.logger.error(e)
+
+        this.$on('info' as never, (e: any) => {
+            this.logger.info('Info: ' + e.message);
         });
-        this.$on('query', (e) => {
-            this.logger.info(e)
+
+        this.$on('warn' as never, (e: any) => {
+            this.logger.warn('Warning: ' + e.message);
         });
     }
 }
