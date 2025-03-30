@@ -1,3 +1,4 @@
+// src/common/error.filter.ts
 import {
     ArgumentsHost,
     Catch,
@@ -6,17 +7,21 @@ import {
     HttpStatus,
     Logger,
 } from '@nestjs/common';
-import { ZodError } from 'zod';
-import { Response } from 'express';
+import { ZodError } from 'zod'; // Untuk menangani error validasi Zod
+import { Response } from 'express'; // Type Response dari Express
 
+// Deklarasi filter dengan decorator @Catch untuk menangani ZodError dan HttpException
 @Catch(ZodError, HttpException)
 export class ErrorFilter implements ExceptionFilter {
+    // Logger untuk mencatat error
     private readonly logger = new Logger(ErrorFilter.name);
 
+    // Method utama yang akan dipanggil ketika ada exception
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
 
+        // Penanganan untuk error validasi Zod
         if (exception instanceof ZodError) {
             this.logger.warn('Validation error', { errors: exception.errors });
 
@@ -24,14 +29,17 @@ export class ErrorFilter implements ExceptionFilter {
                 success: false,
                 code: HttpStatus.BAD_REQUEST,
                 message: 'Validation failed',
+                // Transformasi error Zod menjadi format yang lebih rapi
                 errors: exception.errors.map((err) => ({
-                    path: err.path.join('.'),
+                    path: err.path.join('.'), // Gabungkan path array menjadi string
                     message: err.message,
                     code: err.code,
                 })),
                 timestamp: new Date().toISOString(),
             });
-        } else if (exception instanceof HttpException) {
+        } 
+        // Penanganan untuk HttpException (error HTTP standar Nest)
+        else if (exception instanceof HttpException) {
             const status = exception.getStatus();
             const responseBody = exception.getResponse();
 
@@ -40,13 +48,16 @@ export class ErrorFilter implements ExceptionFilter {
             response.status(status).json({
                 success: false,
                 code: status,
+                // Handle berbagai tipe response body
                 message: typeof responseBody === 'string'
                     ? responseBody
                     : (responseBody as any).message,
                 errors: typeof responseBody === 'object' ? responseBody : null,
                 timestamp: new Date().toISOString(),
             });
-        } else {
+        } 
+        // Penanganan untuk error tak terduga lainnya
+        else {
             this.logger.error('Unexpected error', exception);
 
             response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
