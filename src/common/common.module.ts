@@ -7,6 +7,8 @@ import { PrismaService } from './prisma.module';
 import { ValidationService } from './validation.service';
 import { APP_FILTER } from '@nestjs/core';
 import { ErrorFilter } from './error.filter';
+import { ClientHelper } from '../helpers/client.helper';
+import HijriHelper from 'src/helpers/hijri.helper';
 
 @Global()
 @Module({
@@ -27,11 +29,18 @@ import { ErrorFilter } from './error.filter';
     providers: [
         PrismaService,
         ValidationService,
+        ClientHelper,
+        HijriHelper,
         {
             provide: APP_FILTER,
-            useClass: ErrorFilter, // This registers our global error filter
+            useClass: ErrorFilter,
         },
     ],
-    exports: [PrismaService, ValidationService],
+    exports: [
+        PrismaService,
+        ValidationService,
+        ClientHelper,
+        HijriHelper
+    ],
 })
 export class CommonModule { }

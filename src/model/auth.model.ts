@@ -20,15 +20,3 @@ export class AuthResponse {
     isActive?: boolean;
     createdAt?: string;
 }
-
-// Zod schemas
-export const RegisterAuthRequestSchema = z.object({
-    username: z.string().min(3).max(50),
-    email: z.string().email(),
-    password: z.string().min(6)
-});
-
-export const LoginAuthRequestSchema = z.object({
-    username: z.string().min(3),
-    password: z.string().min(6)
-});

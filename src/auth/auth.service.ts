@@ -41,7 +41,6 @@ export class AuthService {
 
         try {
             return await this.prisma.$transaction(async (tx) => {
-                // 1. Create user with profile
                 const user = await tx.user.create({
                     data: {
                         username: registerRequest.username,
@@ -62,7 +61,6 @@ export class AuthService {
                     }
                 });
 
-                // 2. Create session in the same transaction
                 const session = await tx.session.create({
                     data: {
                         sessionToken: uuid(),
@@ -83,7 +81,7 @@ export class AuthService {
         } catch (error) {
             this.logger.error('Registration failed', { error });
             this.handlePrismaError(error);
-            throw error; // Fallback
+            throw error; 
         }
     }
 
@@ -130,7 +128,7 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Username atau password salah');
         }
 
         const isValid = await bcrypt.compare(
@@ -139,11 +137,11 @@ export class AuthService {
         );
 
         if (!isValid) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Username atau password salah');
         }
 
         if (!user.isActive) {
-            throw new UnauthorizedException('Account disabled');
+            throw new UnauthorizedException('Akun dinonaktifkan');
         }
 
         return user;
@@ -206,8 +204,8 @@ export class AuthService {
         if (existing) {
             throw new ConflictException(
                 existing.email === request.email 
-                    ? 'Email already registered' 
-                    : 'Username taken'
+                    ? 'Email sudah digunakan' 
+                    : 'Username sudah digunakan'
             );
         }
     }
