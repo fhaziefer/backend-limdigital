@@ -1,15 +1,23 @@
+// src/auth/auth.middleware.ts
 import { Injectable, NestMiddleware, UnauthorizedException } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
-import { PrismaService } from "./prisma.service";
-import { User } from "src/model/user.model";
+import { PrismaService } from "../common/prisma.service";
+import { User } from "../model/user.model";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
     constructor(private readonly prismaService: PrismaService) { }
 
+    /**
+     * Middleware untuk menangani autentikasi via session token
+     * @param req Request object yang akan di-attach user jika valid
+     * @param res Response object
+     * @param next Next function untuk melanjutkan pipeline
+     * @throws UnauthorizedException Jika token tidak valid/session expired
+     */
     async use(req: Request & { user?: User }, res: Response, next: NextFunction) {
         try {
-            // 1. Ekstrak token dari header
+            // 1. Ekstrak token dari header Authorization
             const authHeader = req.headers['authorization'];
 
             if (!authHeader) {
@@ -23,7 +31,7 @@ export class AuthMiddleware implements NestMiddleware {
                 throw new UnauthorizedException('Invalid token format');
             }
 
-            // 3. Cari session yang valid
+            // 3. Cari session yang valid di database
             const session = await this.prismaService.session.findFirst({
                 where: {
                     sessionToken: token,
@@ -39,7 +47,7 @@ export class AuthMiddleware implements NestMiddleware {
                 throw new UnauthorizedException('Invalid or expired session');
             }
 
-            // 4. Attach user ke request
+            // 4. Attach user ke request object
             req.user = session.user;
             next();
         } catch (error) {
@@ -48,7 +56,7 @@ export class AuthMiddleware implements NestMiddleware {
                 return next(error); // Lempar error auth ke exception filter
             }
 
-            // Log error unexpected
+            // Log error unexpected untuk debugging
             console.error('AuthMiddleware error:', error);
             next(new UnauthorizedException('Authentication failed'));
         }

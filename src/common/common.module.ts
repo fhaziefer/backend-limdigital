@@ -1,5 +1,5 @@
 // src/common/common.module.ts
-import { Global, Module } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
@@ -11,6 +11,7 @@ import { ErrorFilter } from './error.filter';
 import { ClientHelper } from '../helpers/client.helper';
 import HijriHelper from 'src/helpers/hijri.helper';
 import { PrismaErrorHandler } from './error/prisma.error.handler';
+import { AuthMiddleware } from './auth.middleware';
 
 // Deklarasi module sebagai global dengan decorator @Global()
 @Global()
@@ -52,4 +53,9 @@ import { PrismaErrorHandler } from './error/prisma.error.handler';
         HijriHelper
     ],
 })
-export class CommonModule { }
+export class
+    CommonModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(AuthMiddleware).forRoutes('/api/*')
+    }
+}
