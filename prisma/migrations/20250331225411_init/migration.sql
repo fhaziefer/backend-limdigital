@@ -23,25 +23,28 @@ CREATE TABLE `users` (
 
 -- CreateTable
 CREATE TABLE `sessions` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `sessionToken` VARCHAR(255) NOT NULL,
     `userId` VARCHAR(36) NOT NULL,
     `ipAddress` VARCHAR(45) NULL,
     `userAgent` VARCHAR(255) NULL,
-    `deviceInfo` VARCHAR(255) NULL,
-    `location` VARCHAR(100) NULL,
+    `deviceType` VARCHAR(255) NULL,
+    `browser` VARCHAR(100) NULL,
+    `os` VARCHAR(100) NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `expiresAt` DATETIME(3) NOT NULL,
     `lastActivity` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `sessions_sessionToken_key`(`sessionToken`),
+    INDEX `sessions_userId_idx`(`userId`),
+    INDEX `sessions_sessionToken_idx`(`sessionToken`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `password_reset_tokens` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `token` VARCHAR(100) NOT NULL,
     `userId` VARCHAR(36) NOT NULL,
     `expiresAt` DATETIME(3) NOT NULL,
@@ -76,7 +79,7 @@ CREATE TABLE `profiles` (
 
 -- CreateTable
 CREATE TABLE `addresses` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `profileId` VARCHAR(36) NOT NULL,
     `street` VARCHAR(255) NOT NULL,
     `village` VARCHAR(50) NULL,
@@ -96,7 +99,7 @@ CREATE TABLE `addresses` (
 
 -- CreateTable
 CREATE TABLE `educations` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `profileId` VARCHAR(36) NOT NULL,
     `institution` VARCHAR(100) NOT NULL,
     `degree` VARCHAR(50) NULL,
@@ -113,7 +116,7 @@ CREATE TABLE `educations` (
 
 -- CreateTable
 CREATE TABLE `contacts` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `profileId` VARCHAR(36) NOT NULL,
     `contactType` ENUM('PHONE', 'EMAIL', 'WHATSAPP', 'TELEGRAM', 'LINE', 'OTHER') NOT NULL,
     `value` VARCHAR(100) NOT NULL,
@@ -199,7 +202,7 @@ CREATE TABLE `Member` (
 
 -- CreateTable
 CREATE TABLE `position_history` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `profileId` VARCHAR(36) NOT NULL,
     `memberId` VARCHAR(36) NULL,
     `positionTitle` VARCHAR(100) NOT NULL,
@@ -219,7 +222,7 @@ CREATE TABLE `position_history` (
 
 -- CreateTable
 CREATE TABLE `audit_logs` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` VARCHAR(36) NULL,
     `action` VARCHAR(50) NOT NULL,
     `tableName` VARCHAR(50) NOT NULL,
@@ -235,7 +238,7 @@ CREATE TABLE `audit_logs` (
 
 -- CreateTable
 CREATE TABLE `notifications` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` VARCHAR(36) NOT NULL,
     `title` VARCHAR(100) NOT NULL,
     `message` TEXT NOT NULL,
@@ -250,7 +253,7 @@ CREATE TABLE `notifications` (
 
 -- CreateTable
 CREATE TABLE `letter_templates` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `code` VARCHAR(20) NOT NULL,
     `letterType` ENUM('ROUTINE', 'REFERENCE', 'CERTIFICATE', 'DECISION', 'ENDORSEMENT', 'INSTRUCTION', 'REQUEST_RESPONSE', 'ASSIGNMENT', 'POWER_OF_ATTORNEY', 'RECOMMENDATION', 'STATEMENT', 'WARNING', 'ANNOUNCEMENT', 'AGREEMENT', 'CIRCULAR') NOT NULL,
@@ -267,10 +270,10 @@ CREATE TABLE `letter_templates` (
 
 -- CreateTable
 CREATE TABLE `letters` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `letterNumber` VARCHAR(50) NULL,
     `letterType` ENUM('ROUTINE', 'REFERENCE', 'CERTIFICATE', 'DECISION', 'ENDORSEMENT', 'INSTRUCTION', 'REQUEST_RESPONSE', 'ASSIGNMENT', 'POWER_OF_ATTORNEY', 'RECOMMENDATION', 'STATEMENT', 'WARNING', 'ANNOUNCEMENT', 'AGREEMENT', 'CIRCULAR') NOT NULL,
-    `templateId` VARCHAR(36) NULL,
+    `templateId` INTEGER NULL,
     `subject` VARCHAR(255) NOT NULL,
     `htmlContent` TEXT NOT NULL,
     `pdfUrl` VARCHAR(255) NULL,
@@ -295,8 +298,8 @@ CREATE TABLE `letters` (
 
 -- CreateTable
 CREATE TABLE `recipients` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `address` VARCHAR(255) NULL,
     `email` VARCHAR(100) NULL,
@@ -310,8 +313,8 @@ CREATE TABLE `recipients` (
 
 -- CreateTable
 CREATE TABLE `copies` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `address` VARCHAR(255) NULL,
     `email` VARCHAR(100) NULL,
@@ -325,8 +328,8 @@ CREATE TABLE `copies` (
 
 -- CreateTable
 CREATE TABLE `dispositions` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `fromUserId` VARCHAR(36) NULL,
     `fromProfileId` VARCHAR(36) NULL,
     `toUserId` VARCHAR(36) NULL,
@@ -342,8 +345,8 @@ CREATE TABLE `dispositions` (
 
 -- CreateTable
 CREATE TABLE `attachments` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `fileUrl` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
@@ -354,8 +357,8 @@ CREATE TABLE `attachments` (
 
 -- CreateTable
 CREATE TABLE `approvals` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `approverId` VARCHAR(36) NOT NULL,
     `userId` VARCHAR(36) NULL,
     `level` INTEGER NOT NULL,
@@ -370,8 +373,8 @@ CREATE TABLE `approvals` (
 
 -- CreateTable
 CREATE TABLE `signatures` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `signerId` VARCHAR(36) NOT NULL,
     `userId` VARCHAR(36) NULL,
     `role` ENUM('KETUA_UMUM', 'KETUA_1', 'KETUA_2', 'KETUA_3', 'KETUA_4', 'KETUA_5', 'SEKRETARIS_UMUM', 'SEKRETARIS_1', 'SEKRETARIS_2', 'SEKRETARIS_3', 'SEKRETARIS_4', 'SEKRETARIS_5', 'BENDAHARA', 'WAKIL_BENDAHARA', 'ANGGOTA') NOT NULL,
@@ -386,8 +389,8 @@ CREATE TABLE `signatures` (
 
 -- CreateTable
 CREATE TABLE `stamps` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `stampImage` VARCHAR(255) NOT NULL,
     `stampedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -397,8 +400,8 @@ CREATE TABLE `stamps` (
 
 -- CreateTable
 CREATE TABLE `letter_logs` (
-    `id` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `letterId` INTEGER NOT NULL,
     `userId` VARCHAR(36) NOT NULL,
     `action` VARCHAR(50) NOT NULL,
     `details` TEXT NULL,
@@ -409,7 +412,7 @@ CREATE TABLE `letter_logs` (
 
 -- CreateTable
 CREATE TABLE `letter_number_sequences` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `regionCode` VARCHAR(10) NOT NULL,
     `regionId` VARCHAR(36) NULL,
     `letterType` ENUM('ROUTINE', 'REFERENCE', 'CERTIFICATE', 'DECISION', 'ENDORSEMENT', 'INSTRUCTION', 'REQUEST_RESPONSE', 'ASSIGNMENT', 'POWER_OF_ATTORNEY', 'RECOMMENDATION', 'STATEMENT', 'WARNING', 'ANNOUNCEMENT', 'AGREEMENT', 'CIRCULAR') NOT NULL,
@@ -424,7 +427,7 @@ CREATE TABLE `letter_number_sequences` (
 
 -- CreateTable
 CREATE TABLE `letter_books` (
-    `id` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `bookNumber` VARCHAR(20) NOT NULL,
     `startDate` DATETIME(3) NOT NULL,
     `endDate` DATETIME(3) NULL,
@@ -439,9 +442,9 @@ CREATE TABLE `letter_books` (
 
 -- CreateTable
 CREATE TABLE `letter_book_entries` (
-    `id` VARCHAR(36) NOT NULL,
-    `bookId` VARCHAR(36) NOT NULL,
-    `letterId` VARCHAR(36) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `bookId` INTEGER NOT NULL,
+    `letterId` INTEGER NOT NULL,
     `entryNumber` INTEGER NOT NULL,
     `entryDate` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `notes` TEXT NULL,
@@ -452,7 +455,7 @@ CREATE TABLE `letter_book_entries` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `sessions` ADD CONSTRAINT `sessions_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `sessions` ADD CONSTRAINT `sessions_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `password_reset_tokens` ADD CONSTRAINT `password_reset_tokens_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
