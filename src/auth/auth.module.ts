@@ -5,15 +5,18 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 // Import modul common yang berisi shared providers
 import { CommonModule } from "src/common/common.module";
+import { ScheduleModule } from '@nestjs/schedule';
+import { AuthHelper } from "./auth.helper";
+import { SessionModule } from "src/session/session.module";
 
 // Deklarasi module dengan decorator @Module
 @Module({
     // Import CommonModule yang berisi PrismaService, ValidationService, dan Logger
-    imports: [CommonModule],
-    
+    imports: [CommonModule, SessionModule],
+
     // Providers (services) yang akan tersedia dalam module ini
-    providers: [AuthService],
-    
+    providers: [AuthService, AuthHelper],
+
     // Controller yang termasuk dalam module ini
     controllers: [AuthController]
 })

@@ -10,6 +10,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { ErrorFilter } from './error.filter';
 import { ClientHelper } from '../helpers/client.helper';
 import HijriHelper from 'src/helpers/hijri.helper';
+import { PrismaErrorHandler } from './error/prisma.error.handler';
 
 // Deklarasi module sebagai global dengan decorator @Global()
 @Global()
@@ -32,6 +33,7 @@ import HijriHelper from 'src/helpers/hijri.helper';
     ],
     providers: [
         PrismaService, // Service untuk koneksi database Prisma
+        PrismaErrorHandler, // Service untuk error Prisma
         ValidationService, // Service untuk validasi data
         ClientHelper, // Helper untuk ekstrak info client
         HijriHelper, // Helper untuk konversi kalender Hijriah
@@ -44,6 +46,7 @@ import HijriHelper from 'src/helpers/hijri.helper';
     exports: [
         // Service dan helper yang bisa diakses oleh modul lain
         PrismaService,
+        PrismaErrorHandler,
         ValidationService,
         ClientHelper,
         HijriHelper
