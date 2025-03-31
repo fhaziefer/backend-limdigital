@@ -1,6 +1,6 @@
 // src/session/session.repository.ts
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../common/prisma.module';
+import { PrismaService } from '../common/prisma.service';
 import { SessionInfo } from '../model/session.model';
 import { ClientInfo } from '../model/session.model';
 

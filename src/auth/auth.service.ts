@@ -7,7 +7,7 @@ import { PrismaErrorHandler } from '../common/error/prisma.error.handler';
 import { AuthValidation } from './auth.validation';
 import { RegisterAuthRequest, LoginAuthRequest, AuthResponse } from '../model/auth.model';
 import { ClientInfo } from '../model/session.model';
-import { PrismaService } from '../common/prisma.module';
+import { PrismaService } from '../common/prisma.service';
 
 @Injectable()
 export class AuthService {

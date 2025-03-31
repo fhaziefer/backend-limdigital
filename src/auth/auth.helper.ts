@@ -1,6 +1,6 @@
 // src/auth/auth.helper.ts
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../common/prisma.module';
+import { PrismaService } from '../common/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterAuthRequest, LoginAuthRequest } from '../model/auth.model';
 
