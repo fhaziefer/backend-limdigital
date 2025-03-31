@@ -139,7 +139,7 @@ model User {
 }
 
 model Session {
-  id           String   @id @default(uuid()) @db.VarChar(36)
+  id           Int      @id @default(autoincrement())
   sessionToken String   @unique @db.VarChar(255)
   userId       String   @db.VarChar(36)
   ipAddress    String?  @db.VarChar(45)
@@ -160,7 +160,7 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.VarChar(36)
+  id        Int      @id @default(autoincrement())
   token     String   @db.VarChar(100)
   userId    String   @db.VarChar(36)
   expiresAt DateTime
@@ -205,7 +205,7 @@ model Profile {
 }
 
 model Address {
-  id         String   @id @default(uuid()) @db.VarChar(36)
+  id         Int      @id @default(autoincrement())
   profileId  String   @unique @db.VarChar(36)
   street     String   @db.VarChar(255)
   village    String?  @db.VarChar(50)
@@ -225,7 +225,7 @@ model Address {
 }
 
 model Education {
-  id           String   @id @default(uuid()) @db.VarChar(36)
+  id           Int      @id @default(autoincrement())
   profileId    String   @db.VarChar(36)
   institution  String   @db.VarChar(100)
   degree       String?  @db.VarChar(50)
@@ -243,7 +243,7 @@ model Education {
 }
 
 model Contact {
-  id          String      @id @default(uuid()) @db.VarChar(36)
+  id          Int         @id @default(autoincrement())
   profileId   String      @db.VarChar(36)
   contactType ContactType
   value       String      @db.VarChar(100)
@@ -341,7 +341,7 @@ model Member {
 }
 
 model PositionHistory {
-  id             String    @id @default(uuid()) @db.VarChar(36)
+  id             Int       @id @default(autoincrement())
   profileId      String    @db.VarChar(36)
   memberId       String?   @db.VarChar(36)
   positionTitle  String    @db.VarChar(100)
@@ -363,7 +363,7 @@ model PositionHistory {
 }
 
 model AuditLog {
-  id        String   @id @default(uuid()) @db.VarChar(36)
+  id        Int      @id @default(autoincrement())
   userId    String?  @db.VarChar(36)
   action    String   @db.VarChar(50)
   tableName String   @db.VarChar(50)
@@ -380,7 +380,7 @@ model AuditLog {
 }
 
 model Notification {
-  id               String           @id @default(uuid()) @db.VarChar(36)
+  id               Int              @id @default(autoincrement())
   userId           String           @db.VarChar(36)
   title            String           @db.VarChar(100)
   message          String           @db.Text
@@ -396,7 +396,7 @@ model Notification {
 }
 
 model LetterTemplate {
-  id             String     @id @default(uuid()) @db.VarChar(36)
+  id             Int        @id @default(autoincrement())
   name           String     @db.VarChar(100)
   code           String     @unique @db.VarChar(20)
   letterType     LetterType
@@ -413,10 +413,10 @@ model LetterTemplate {
 }
 
 model Letter {
-  id              String        @id @default(uuid()) @db.VarChar(36)
+  id              Int           @id @default(autoincrement())
   letterNumber    String?       @unique @db.VarChar(50)
   letterType      LetterType
-  templateId      String?       @db.VarChar(36)
+  templateId      Int?
   subject         String        @db.VarChar(255)
   htmlContent     String        @db.Text
   pdfUrl          String?       @db.VarChar(255)
@@ -454,8 +454,8 @@ model Letter {
 }
 
 model Recipient {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  letterId     String   @db.VarChar(36)
+  id           Int      @id @default(autoincrement())
+  letterId     Int
   name         String   @db.VarChar(100)
   address      String?  @db.VarChar(255)
   email        String?  @db.VarChar(100)
@@ -470,8 +470,8 @@ model Recipient {
 }
 
 model Copy {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  letterId     String   @db.VarChar(36)
+  id           Int      @id @default(autoincrement())
+  letterId     Int
   name         String   @db.VarChar(100)
   address      String?  @db.VarChar(255)
   email        String?  @db.VarChar(100)
@@ -486,8 +486,8 @@ model Copy {
 }
 
 model Disposition {
-  id            String    @id @default(uuid()) @db.VarChar(36)
-  letterId      String    @db.VarChar(36)
+  id            Int       @id @default(autoincrement())
+  letterId      Int
   fromUserId    String?   @db.VarChar(36)
   fromProfileId String?   @db.VarChar(36)
   toUserId      String?   @db.VarChar(36)
@@ -508,8 +508,8 @@ model Disposition {
 }
 
 model Attachment {
-  id          String   @id @default(uuid()) @db.VarChar(36)
-  letterId    String   @db.VarChar(36)
+  id          Int      @id @default(autoincrement())
+  letterId    Int
   name        String   @db.VarChar(100)
   fileUrl     String   @db.VarChar(255)
   description String?  @db.Text
@@ -521,8 +521,8 @@ model Attachment {
 }
 
 model Approval {
-  id         String         @id @default(uuid()) @db.VarChar(36)
-  letterId   String         @db.VarChar(36)
+  id         Int            @id @default(autoincrement())
+  letterId   Int
   approverId String         @db.VarChar(36)
   userId     String?        @db.VarChar(36)
   level      Int
@@ -540,8 +540,8 @@ model Approval {
 }
 
 model Signature {
-  id               String             @id @default(uuid()) @db.VarChar(36)
-  letterId         String             @db.VarChar(36)
+  id               Int                @id @default(autoincrement())
+  letterId         Int
   signerId         String             @db.VarChar(36)
   userId           String?            @db.VarChar(36)
   role             LeadershipPosition
@@ -559,8 +559,8 @@ model Signature {
 }
 
 model Stamp {
-  id         String   @id @default(uuid()) @db.VarChar(36)
-  letterId   String   @db.VarChar(36)
+  id         Int      @id @default(autoincrement())
+  letterId   Int
   stampImage String   @db.VarChar(255)
   stampedAt  DateTime @default(now())
   createdAt  DateTime @default(now())
@@ -571,8 +571,8 @@ model Stamp {
 }
 
 model LetterLog {
-  id        String   @id @default(uuid()) @db.VarChar(36)
-  letterId  String   @db.VarChar(36)
+  id        Int      @id @default(autoincrement())
+  letterId  Int
   userId    String   @db.VarChar(36)
   action    String   @db.VarChar(50)
   details   String?  @db.Text
@@ -585,7 +585,7 @@ model LetterLog {
 }
 
 model LetterNumberSequence {
-  id         String     @id @default(uuid()) @db.VarChar(36)
+  id         Int        @id @default(autoincrement())
   regionCode String     @db.VarChar(10)
   regionId   String?    @db.VarChar(36)
   letterType LetterType
@@ -601,7 +601,7 @@ model LetterNumberSequence {
 }
 
 model LetterBook {
-  id                  String    @id @default(uuid()) @db.VarChar(36)
+  id                  Int       @id @default(autoincrement())
   bookNumber          String    @unique @db.VarChar(20)
   startDate           DateTime
   endDate             DateTime?
@@ -618,9 +618,9 @@ model LetterBook {
 }
 
 model LetterBookEntry {
-  id          String   @id @default(uuid()) @db.VarChar(36)
-  bookId      String   @db.VarChar(36)
-  letterId    String   @db.VarChar(36)
+  id          Int      @id @default(autoincrement())
+  bookId      Int
+  letterId    Int
   entryNumber Int
   entryDate   DateTime @default(now())
   notes       String?  @db.Text

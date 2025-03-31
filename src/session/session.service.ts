@@ -25,24 +25,42 @@ export class SessionService implements OnModuleInit {
     }
 
     /**
-     * Membuat session baru untuk user
-     * @param userId ID user pemilik session
-     * @param clientInfo Informasi client (opsional)
-     * @returns Promise<string> Session token
-     */
-    async createSession(userId: string, clientInfo?: Partial<ClientInfo>): Promise<string> {
-        const sessionToken = uuid();
-        const expiresAt = this.getSessionExpiry();
+    * Membuat atau memperbarui session berdasarkan client info
+    * @param userId ID user pemilik session
+    * @param clientInfo Informasi client (opsional)
+    * @returns Token session (baru atau yang sudah ada)
+    */
+    async createOrUpdateSession(
+        userId: string,
+        clientInfo?: Partial<ClientInfo>
+    ): Promise<string> {
+        const expiresAt = this.getSessionExpiry();  // Dapatkan waktu kadaluarsa baru
 
+        // 1. Cari session yang sudah ada dengan client info sama
+        const existingSession = await this.repository.findExistingSession(
+            userId,
+            clientInfo || {}
+        );
+
+        // 2. Jika session sudah ada, perbarui waktu kadaluarsa
+        if (existingSession) {
+            await this.repository.updateSessionExpiry(existingSession.id, expiresAt);
+            this.logger.debug(`Memperbarui session yang ada: ${existingSession.id}`);
+            return existingSession.sessionToken;     // Kembalikan token yang sama
+        }
+
+        // 3. Jika tidak ada, buat session baru
+        const sessionToken = uuid();
         await this.repository.create({
             sessionToken,
             userId,
             expiresAt,
             isActive: true,
-            lastActivity: new Date(),
-            ...clientInfo
+            lastActivity: new Date(),               // Set waktu aktivitas terakhir
+            ...clientInfo                           // Spread client info
         });
 
+        this.logger.log(`Membuat session baru untuk user: ${userId}`);
         return sessionToken;
     }
 

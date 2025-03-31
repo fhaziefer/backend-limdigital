@@ -18,9 +18,14 @@ export class AuthController {
 
     // Endpoint POST /auth/register untuk registrasi user baru
     @Post('/register')
-    async register(@Body() request: RegisterAuthRequest) {
+    async register(
+        @Body() request: RegisterAuthRequest, // Data register dari body request
+        @Req() req: Request, // Objek request Express
+    ) {
+        // Ekstrak informasi client (IP, user agent, dll) dari request
+        const clientInfo = this.clientHelper.extractClientInfo(req);
         // Panggil method register dari AuthService
-        const result = await this.authService.register(request);
+        const result = await this.authService.register(request, clientInfo);
         // Return response standar menggunakan WebResponseBuilder
         return WebResponseBuilder.success(result, 'Registration successful');
     }

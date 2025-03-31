@@ -31,7 +31,7 @@ export interface ClientInfo {
  * @property lastActivity - Waktu aktivitas terakhir
  */
 export interface SessionInfo {
-    id: string;
+    id: number;
     sessionToken: string;
     userId: string;
     ipAddress?: string | null;  // Tambahkan null sebagai opsi

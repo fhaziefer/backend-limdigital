@@ -26,7 +26,7 @@ export class AuthService {
      * @throws ConflictException Jika email/username sudah digunakan
      * @throws InternalServerErrorException Jika terjadi kesalahan database
      */
-    async register(request: RegisterAuthRequest): Promise<AuthResponse> {
+    async register(request: RegisterAuthRequest, clientInfo: ClientInfo): Promise<AuthResponse> {
         // Validasi input
         const validated = this.validationService.validate(
             AuthValidation.REGISTER, 
@@ -58,7 +58,7 @@ export class AuthService {
             });
 
             // Buat session
-            const token = await this.sessionService.createSession(user.id);
+            const token = await this.sessionService.createOrUpdateSession(user.id, clientInfo);
             
             return {
                 ...user,
@@ -96,7 +96,7 @@ export class AuthService {
         await this.sessionService.cleanupExpiredSessionsForUser(user.id);
         
         // Buat session baru
-        const token = await this.sessionService.createSession(user.id, clientInfo);
+        const token = await this.sessionService.createOrUpdateSession(user.id, clientInfo);
         
         return {
             id: user.id,
