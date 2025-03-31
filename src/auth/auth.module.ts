@@ -5,7 +5,6 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 // Import modul common yang berisi shared providers
 import { CommonModule } from "src/common/common.module";
-import { ScheduleModule } from '@nestjs/schedule';
 import { AuthHelper } from "./auth.helper";
 import { SessionModule } from "src/session/session.module";
 
