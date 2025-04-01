@@ -45,30 +45,22 @@ export class AuthController {
         // Return response standar menggunakan WebResponseBuilder
         return WebResponseBuilder.success(result, 'Login successful');
     }
-}
 
-@Controller('api')
-export class LogoutController {
-    constructor(
-        private authService: AuthService,
-        private clientHelper: ClientHelper
-    ) { }
-
-    /**
+        /**
      * Endpoint POST /api/logout for user logout
      * @param user Authenticated user from @Auth decorator
      * @param authorization Authorization header with Bearer token
      * @param req Request object for client info
      * @returns Standard web response
      */
-    @Post('/logout')
-    async logout(
-        @Auth() user: User,
-        @Headers('authorization') authorization: string,
-        @Req() req: Request,
-    ) {
-        const clientInfo = this.clientHelper.extractClientInfo(req);
-        const result = await this.authService.logout(user.id, authorization, clientInfo);
-        return WebResponseBuilder.success(result, 'Logout successful');
-    }
+        @Post('/logout')
+        async logout(
+            @Auth() user: User,
+            @Headers('authorization') authorization: string,
+            @Req() req: Request,
+        ) {
+            const clientInfo = this.clientHelper.extractClientInfo(req);
+            const result = await this.authService.logout(user.id, authorization, clientInfo);
+            return WebResponseBuilder.success(result, 'Logout successful');
+        }
 }
