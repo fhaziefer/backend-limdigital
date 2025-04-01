@@ -2,7 +2,7 @@
 import { Module } from "@nestjs/common";
 // Import komponen-komponen auth
 import { AuthService } from "./auth.service";
-import { AuthController } from "./auth.controller";
+import { AuthController, LogoutController } from "./auth.controller";
 // Import modul common yang berisi shared providers
 import { CommonModule } from "src/common/common.module";
 import { AuthHelper } from "./auth.helper";
@@ -17,7 +17,7 @@ import { SessionModule } from "src/session/session.module";
     providers: [AuthService, AuthHelper],
 
     // Controller yang termasuk dalam module ini
-    controllers: [AuthController]
+    controllers: [AuthController, LogoutController]
 })
 export class AuthModule {
     // Class kosong karena cukup menggunakan decorator untuk konfigurasi

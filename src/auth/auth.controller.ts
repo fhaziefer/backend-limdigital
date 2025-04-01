@@ -1,11 +1,13 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Post, Req, Headers } from '@nestjs/common';
 // Import service dan komponen pendukung
 import { AuthService } from './auth.service';
 import { WebResponseBuilder } from '../model/web.model';
 import { LoginAuthRequest, RegisterAuthRequest } from '../model/auth.model';
 import { Request } from 'express';
 import { ClientHelper } from '../helpers/client.helper';
+import { User } from 'src/model/user.model';
+import { Auth } from 'src/common/auth.decorator';
 
 // Deklarasi controller dengan base route '/auth'
 @Controller('/auth')
@@ -42,5 +44,31 @@ export class AuthController {
         const result = await this.authService.login(request, clientInfo);
         // Return response standar menggunakan WebResponseBuilder
         return WebResponseBuilder.success(result, 'Login successful');
+    }
+}
+
+@Controller('api')
+export class LogoutController {
+    constructor(
+        private authService: AuthService,
+        private clientHelper: ClientHelper
+    ) { }
+
+    /**
+     * Endpoint POST /api/logout for user logout
+     * @param user Authenticated user from @Auth decorator
+     * @param authorization Authorization header with Bearer token
+     * @param req Request object for client info
+     * @returns Standard web response
+     */
+    @Post('/logout')
+    async logout(
+        @Auth() user: User,
+        @Headers('authorization') authorization: string,
+        @Req() req: Request,
+    ) {
+        const clientInfo = this.clientHelper.extractClientInfo(req);
+        const result = await this.authService.logout(user.id, authorization, clientInfo);
+        return WebResponseBuilder.success(result, 'Logout successful');
     }
 }

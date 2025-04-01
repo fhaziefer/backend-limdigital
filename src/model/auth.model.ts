@@ -38,3 +38,14 @@ export interface AuthResponse {
     isActive?: boolean;
     createdAt?: string;
 }
+
+export interface LogoutRequest {
+    token?: string; // Optional token to logout specific session
+}
+
+export interface LogoutResponse {
+    success: boolean;
+    message: string;
+    timestamp: string;
+    sessionToken?: string;
+}
