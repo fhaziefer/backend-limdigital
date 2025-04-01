@@ -29,7 +29,7 @@ export class AuthController {
         // Panggil method register dari AuthService
         const result = await this.authService.register(request, clientInfo);
         // Return response standar menggunakan WebResponseBuilder
-        return WebResponseBuilder.success(result, 'Registration successful');
+        return WebResponseBuilder.successCreated(result, 'Registration successful');
     }
 
     // Endpoint POST /auth/login untuk login user
@@ -43,7 +43,7 @@ export class AuthController {
         // Panggil method login dari AuthService dengan data login dan info client
         const result = await this.authService.login(request, clientInfo);
         // Return response standar menggunakan WebResponseBuilder
-        return WebResponseBuilder.success(result, 'Login successful');
+        return WebResponseBuilder.successCreated(result, 'Login successful');
     }
 
         /**
@@ -61,6 +61,6 @@ export class AuthController {
         ) {
             const clientInfo = this.clientHelper.extractClientInfo(req);
             const result = await this.authService.logout(user.id, authorization, clientInfo);
-            return WebResponseBuilder.success(result, 'Logout successful');
+            return WebResponseBuilder.successCreated(result, 'Logout successful');
         }
 }
