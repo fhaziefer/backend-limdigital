@@ -5,23 +5,23 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 @Injectable()
 export class PrismaErrorHandler {
     /**
-     * Handle error khusus dari Prisma
+     * Handle specific errors from Prisma
      * @param error Error object
-     * @throws ConflictException Untuk error duplikasi data
-     * @throws InternalServerErrorException Untuk error database lainnya
+     * @throws ConflictException for duplicate data errors
+     * @throws InternalServerErrorException for other database errors
      */
     handle(error: unknown): never {
         if (error instanceof PrismaClientKnownRequestError) {
             switch (error.code) {
-                case 'P2002': // Violasi constraint unik
-                    throw new ConflictException('Data sudah terdaftar');
-                case 'P2003': // Violasi foreign key
-                    throw new InternalServerErrorException('Referensi data tidak valid');
-                default: // Error Prisma lainnya
-                    throw new InternalServerErrorException('Kesalahan database');
+                case 'P2002': // Unique constraint violation
+                    throw new ConflictException('Data already exists');
+                case 'P2003': // Foreign key constraint violation
+                    throw new InternalServerErrorException('Invalid data reference');
+                default: // Other Prisma errors
+                    throw new InternalServerErrorException('Database error occurred');
             }
         }
-        // Re-throw error yang tidak dikenali
+        // Re-throw unrecognized errors
         throw error; 
     }
 }
