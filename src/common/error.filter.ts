@@ -12,46 +12,46 @@ import { Response } from 'express';
 import { WebResponseBuilder } from '../model/web.model';
 
 /**
- * Global exception filter untuk menangani semua jenis error yang terjadi di aplikasi
- * - Menangani ZodError (error validasi)
- * - Menangani HttpException (error HTTP yang diketahui)
- * - Menangani Error umum (unexpected errors)
+ * Global exception filter that handles all types of errors in the application
+ * - Handles ZodError (validation errors)
+ * - Handles HttpException (known HTTP errors)
+ * - Handles generic Errors (unexpected errors)
  * 
- * Filter ini akan memformat semua error response sesuai standar WebResponse
+ * This filter formats all error responses according to the WebResponse standard
  */
 @Catch(ZodError, HttpException, Error)
 export class ErrorFilter implements ExceptionFilter {
-    // Logger instance untuk mencatat error
+    // Logger instance for error tracking
     private readonly logger = new Logger(ErrorFilter.name);
 
     /**
-     * Method utama yang menangani exception
-     * @param exception Exception yang terjadi
-     * @param host ArgumentsHost untuk mengakses request/response
+     * Main method that handles exceptions
+     * @param exception The thrown exception
+     * @param host ArgumentsHost for accessing request/response objects
      */
     catch(exception: unknown, host: ArgumentsHost) {
-        // Dapatkan context HTTP dari ArgumentsHost
+        // Get HTTP context from ArgumentsHost
         const ctx = host.switchToHttp();
-        // Dapatkan response object dari Express
+        // Get Express response object
         const response = ctx.getResponse<Response>();
 
         // ==============================================
-        // PENANGANAN ERROR VALIDASI (ZodError)
+        // VALIDATION ERROR HANDLING (ZodError)
         // ==============================================
         if (exception instanceof ZodError) {
-            // Log warning untuk error validasi
+            // Log validation error warning
             this.logger.warn('Validation error', { errors: exception.errors });
 
-            // Format error validasi menjadi struktur yang lebih rapi
+            // Format validation errors into a cleaner structure
             const validationErrors = exception.errors.map(err => ({
-                path: err.path.join('.'),  // Gabungkan path array menjadi string
-                message: err.message,      // Pesan error dari Zod
-                code: err.code,           // Kode error dari Zod
+                path: err.path.join('.'),  // Convert path array to string
+                message: err.message,      // Error message from Zod
+                code: err.code,           // Error code from Zod
             }));
 
-            // Kirim response dengan:
-            // - Status code 400 (Bad Request)
-            // - Format standar error validasi
+            // Send response with:
+            // - 400 (Bad Request) status code
+            // - Standardized validation error format
             response
                 .status(HttpStatus.BAD_REQUEST)
                 .json(WebResponseBuilder.validationError(validationErrors));
@@ -59,31 +59,31 @@ export class ErrorFilter implements ExceptionFilter {
         }
 
         // ==============================================
-        // PENANGANAN HTTP EXCEPTION (Error yang diketahui)
+        // HTTP EXCEPTION HANDLING (Known errors)
         // ==============================================
         if (exception instanceof HttpException) {
-            // Dapatkan status code dan response body dari exception
+            // Get status code and response body from exception
             const status = exception.getStatus();
             const responseBody = exception.getResponse();
 
-            // Default message dan errors
+            // Default message and errors
             let message = 'An error occurred';
             let errors: unknown = undefined;
 
-            // Handle response body yang bisa berupa string atau object
+            // Handle response body which can be either string or object
             if (typeof responseBody === 'string') {
-                // Jika response body berupa string langsung
+                // If response body is directly a string
                 message = responseBody;
             } else if (typeof responseBody === 'object') {
-                // Jika response body berupa object, coba ekstrak message dan errors
+                // If response body is an object, extract message and errors
                 message = (responseBody as any).message || message;
                 errors = (responseBody as any).errors || undefined;
             }
 
-            // Log warning untuk HTTP exception
+            // Log HTTP exception warning
             this.logger.warn('HTTP Exception', { status, responseBody });
 
-            // Handle status code tertentu dengan response builder yang spesifik
+            // Handle specific status codes with appropriate response builders
             switch (status) {
                 case HttpStatus.UNAUTHORIZED:
                     response.status(status).json(WebResponseBuilder.unauthorized(message));
@@ -101,7 +101,7 @@ export class ErrorFilter implements ExceptionFilter {
                     response.status(status).json(WebResponseBuilder.badRequest(message, errors));
                     break;
                 default:
-                    // Untuk status code lain, gunakan format default
+                    // For other status codes, use default format
                     response.status(status).json({
                         success: false,
                         code: status,
@@ -114,15 +114,15 @@ export class ErrorFilter implements ExceptionFilter {
         }
 
         // ==============================================
-        // PENANGANAN UNEXPECTED ERROR (Error umum)
+        // UNEXPECTED ERROR HANDLING (Generic errors)
         // ==============================================
         if (exception instanceof Error) {
-            // Log error dengan stack trace untuk debugging
+            // Log error with stack trace for debugging
             this.logger.error('Unexpected error', exception.stack || exception.message);
 
-            // Kirim response error internal server
-            // Di development mode, sertakan detail error
-            // Di production mode, hanya kirim pesan umum
+            // Send internal server error response
+            // Include error details in development mode
+            // Only generic message in production mode
             response
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .json(WebResponseBuilder.serverError(
@@ -138,9 +138,9 @@ export class ErrorFilter implements ExceptionFilter {
         }
 
         // ==============================================
-        // PENANGANAN UNKNOWN ERROR (Fallback)
+        // UNKNOWN ERROR HANDLING (Fallback)
         // ==============================================
-        // Jika error tidak termasuk dalam jenis di atas
+        // If error doesn't match any of the above types
         this.logger.error('Unknown error type', exception);
         response
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
