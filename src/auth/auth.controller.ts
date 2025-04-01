@@ -1,5 +1,5 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Post, Req, Headers } from '@nestjs/common';
+import { Body, Controller, Post, Req, Headers, Delete } from '@nestjs/common';
 // Import service dan komponen pendukung
 import { AuthService } from './auth.service';
 import { WebResponseBuilder } from '../model/web.model';
@@ -53,7 +53,7 @@ export class AuthController {
      * @param req Request object for client info
      * @returns Standard web response
      */
-        @Post('/logout')
+        @Delete('/logout')
         async logout(
             @Auth() user: User,
             @Headers('authorization') authorization: string,
