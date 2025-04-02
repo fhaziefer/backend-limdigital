@@ -88,17 +88,47 @@ export class CommonModule implements NestModule {
      */
     configure(consumer: MiddlewareConsumer) {
         /**
-         * Apply AuthMiddleware to:
-         * - All routes under /api
-         * - Specific /auth/logout route
+         * First middleware layer: Global application
+         * Apply AuthMiddleware to ALL routes (*) while excluding:
+         * - All routes under /auth
+         * - All routes under /public
          * 
-         * Terapkan AuthMiddleware ke:
-         * - Semua rute di bawah /api
-         * - Rute spesifik /auth/logout
+         * Lapisan middleware pertama: Aplikasi global
+         * Terapkan AuthMiddleware ke SEMUA rute (*) dengan pengecualian:
+         * - Semua rute di bawah /auth
+         * - Semua rute di bawah /public
          */
-        consumer.apply(AuthMiddleware).forRoutes(
-            { path: '/api/*', method: RequestMethod.ALL },
-            { path: '/auth/logout', method: RequestMethod.DELETE }
-        );
+        consumer
+            .apply(AuthMiddleware)
+            .exclude(
+                // Exclude all routes under /auth
+                // Pengecualian semua rute di bawah /auth
+                { path: 'auth', method: RequestMethod.ALL },
+                { path: 'auth/(.*)', method: RequestMethod.ALL },
+
+                // Exclude all public routes
+                // Pengecualian semua rute public
+                { path: 'public/(.*)', method: RequestMethod.ALL }
+            )
+            .forRoutes('*');
+
+        /**
+         * Second middleware layer: Specific override
+         * Re-apply AuthMiddleware specifically to:
+         * - DELETE /auth/logout route
+         * 
+         * Note: This overrides the previous exclusion for this specific route
+         * 
+         * Lapisan middleware kedua: Override spesifik
+         * Terapkan kembali AuthMiddleware khusus untuk:
+         * - Rute DELETE /auth/logout
+         * 
+         * Catatan: Ini mengesampingkan pengecualian sebelumnya untuk rute spesifik ini
+         */
+        consumer
+            .apply(AuthMiddleware)
+            .forRoutes(
+                { path: 'auth/logout', method: RequestMethod.DELETE }
+            );
     }
 }
