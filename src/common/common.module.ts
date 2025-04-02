@@ -1,5 +1,5 @@
 // src/common/common.module.ts
-import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
@@ -32,7 +32,7 @@ import { AuthMiddleware } from './auth.middleware';
             format: winston.format.json(), // JSON output format // Format output JSON
             transports: [new winston.transports.Console()], // Log to console // Log ke console
         }),
-        
+
         /**
          * Environment variables configuration
          * Konfigurasi variabel environment
@@ -56,7 +56,7 @@ import { AuthMiddleware } from './auth.middleware';
         ValidationService, // Data validation service // Layanan validasi data
         ClientHelper, // Client information extraction helper // Helper ekstraksi info client
         HijriHelper, // Hijri calendar conversion helper // Helper konversi kalender Hijriah
-        
+
         /**
          * Global exception filter provider
          * Penyedia filter exception global
@@ -97,8 +97,8 @@ export class CommonModule implements NestModule {
          * - Rute spesifik /auth/logout
          */
         consumer.apply(AuthMiddleware).forRoutes(
-            '/api/*', // All API routes // Semua rute API
-            '/auth/logout' // Logout endpoint // Endpoint logout
+            { path: '/api/*', method: RequestMethod.ALL },
+            { path: '/auth/logout', method: RequestMethod.DELETE }
         );
     }
 }
