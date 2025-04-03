@@ -20,42 +20,25 @@ export class TestService {
     }): Promise<User> {
         const defaultUser = {
             username: "test.debug",
-            password: "TestDebug123", // Note: Should be hashed in real implementation
+            password: "TestDebug123",
             email: "test@debug.com"
         };
-
+    
         const userData = { ...defaultUser, ...options };
-
-        try {
-            this.logger.log(`Creating test user: ${userData.username}`);
-
-            return await this.prismaService.$transaction(async (prisma) => {
-                // Create user
-                const user = await prisma.user.create({
-                    data: {
-                        username: userData.username,
-                        passwordHash: await bcrypt.hash(userData.password, 10), // In real app, this should be hashed
-                        email: userData.email,
-                        isActive: true,
-                        profile: {
-                            create: {
-                                // Add default profile data if needed
-                                fullName: "Test Debug User"
-                            }
-                        }
-                    },
-                    include: {
-                        profile: true
+    
+        return this.prismaService.user.create({
+            data: {
+                username: userData.username,
+                email: userData.email,
+                passwordHash: await bcrypt.hash(userData.password, 10),
+                isActive: true,
+                profile: {
+                    create: {
+                        fullName: userData.username || "Test User"
                     }
-                });
-
-                this.logger.log(`Successfully created test user with ID: ${user.id}`);
-                return user;
-            });
-        } catch (error) {
-            this.logger.error('Failed to create test user', error.stack);
-            throw error;
-        }
+                }
+            }
+        });
     }
 
     /**
@@ -146,5 +129,15 @@ export class TestService {
             data: { isActive: false }
         });
     }
+
+    async changePassword(username: string, newPassword: string): Promise<void> {
+        await this.prismaService.user.update({
+            where: { username },
+            data: { 
+                passwordHash: await bcrypt.hash(newPassword, 10),
+                passwordChangedAt: new Date() 
+            }
+        });
+    }    
 
 }

@@ -564,4 +564,230 @@ describe('AuthController', () => {
       expect(response.body.success).toBe(false);
     });
   });
+
+  /**
+   * TEST GROUP: ENDPOINT UPDATE PASSWORD
+   * Menguji semua skenario untuk endpoint PUT /auth/password
+   * 
+   * Grup test ini berisi skenario-skenario pengujian untuk fitur perubahan password user.
+   * Meliputi:
+   * - Test positif untuk perubahan password yang valid
+   * - Test validasi berbagai kasus input tidak valid
+   * - Test keamanan seperti invalidasi session lama setelah password berubah
+   * - Test autentikasi untuk request yang tidak terautentikasi
+   */
+  describe('PUT /auth/password', () => {
+    let authToken: string;
+    const testUser = {
+      username: 'test.debug',
+      password: 'TestDebug123',
+      email: 'test@debug.com'
+    };
+
+    /**
+     * Setup sebelum setiap test case
+     * - Membersihkan database
+     * - Membuat user test
+     * - Login untuk mendapatkan token autentikasi
+     */
+    beforeEach(async () => {
+      await testService.cleanDatabase();
+      await testService.createTestUser(testUser);
+
+      // Login untuk mendapatkan token
+      const loginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          username: testUser.username,
+          password: testUser.password
+        });
+
+      authToken = loginResponse.body.data.token;
+    });
+
+    /**
+     * TEST POSITIF: PERUBAHAN PASSWORD BERHASIL
+     * Menguji skenario perubahan password dengan data yang valid
+     * - Password baru memenuhi kriteria keamanan
+     * - Konfirmasi password sesuai
+     * - Password lama benar
+     */
+    it('should successfully update password and return new token', async () => {
+      const newPassword = 'NewValidPass123';
+      const response = await request(app.getHttpServer())
+        .put('/auth/password')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          currentPassword: testUser.password,
+          newPassword: newPassword,
+          confirmPassword: newPassword
+        });
+
+      logger.info('Update password response:', response.body);
+
+      // Verifikasi response sukses
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.token).not.toBe(authToken);
+
+      // Verifikasi password baru bisa digunakan untuk login
+      const loginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          username: testUser.username,
+          password: newPassword
+        });
+
+      expect(loginResponse.status).toBe(201);
+    });
+
+    /**
+     * SUBGROUP: TEST VALIDASI INPUT
+     * Menguji berbagai skenario validasi input yang tidak valid
+     */
+    describe('Validation Errors', () => {
+      /**
+       * Test untuk password lama kosong
+       */
+      it('should reject empty current password', async () => {
+        const response = await request(app.getHttpServer())
+          .put('/auth/password')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            currentPassword: '',
+            newPassword: 'NewValidPass123',
+            confirmPassword: 'NewValidPass123'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.currentPassword).toBeDefined();
+      });
+
+      /**
+       * Test untuk password baru yang tidak memenuhi kriteria keamanan
+       * - Terlalu pendek
+       * - Tanpa huruf besar
+       * - Tanpa huruf kecil
+       * - Tanpa angka
+       */
+      it('should reject weak new password', async () => {
+        const weakPasswords = [
+          { pass: 'Sh0rt', error: 'minimal 8 karakter' },
+          { pass: 'nouppercase1', error: 'huruf besar' },
+          { pass: 'NOLOWERCASE1', error: 'huruf kecil' },
+          { pass: 'NoNumbers', error: 'angka' }
+        ];
+
+        for (const { pass, error } of weakPasswords) {
+          const response = await request(app.getHttpServer())
+            .put('/auth/password')
+            .set('Authorization', `Bearer ${authToken}`)
+            .send({
+              currentPassword: testUser.password,
+              newPassword: pass,
+              confirmPassword: pass
+            });
+
+          expect(response.status).toBe(400);
+          expect(response.body.errors.newPassword).toContain(error);
+        }
+      });
+
+      /**
+       * Test untuk konfirmasi password yang tidak sesuai
+       */
+      it('should reject password mismatch', async () => {
+        const response = await request(app.getHttpServer())
+          .put('/auth/password')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            currentPassword: testUser.password,
+            newPassword: 'NewValidPass123',
+            confirmPassword: 'DifferentPass123'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.confirmPassword).toBeDefined();
+      });
+    });
+
+    /**
+     * SUBGROUP: TEST KEAMANAN
+     * Menguji berbagai aspek keamanan dari fitur perubahan password
+     */
+    describe('Security Checks', () => {
+      /**
+       * Test untuk memastikan session lama diinvalidate setelah password berubah
+       */
+      it('should invalidate old sessions after password change', async () => {
+        const newPassword = 'NewValidPass123';
+        await request(app.getHttpServer())
+          .put('/auth/password')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            currentPassword: testUser.password,
+            newPassword: newPassword,
+            confirmPassword: newPassword
+          });
+
+        // Coba gunakan token lama
+        const response = await request(app.getHttpServer())
+          .get('/auth/me') // Endpoint yang membutuhkan auth
+          .set('Authorization', `Bearer ${authToken}`);
+
+        expect(response.status).toBe(401);
+      });
+
+      /**
+       * Test untuk password lama yang salah
+       */
+      it('should reject if current password is wrong', async () => {
+        const response = await request(app.getHttpServer())
+          .put('/auth/password')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            currentPassword: 'WrongPassword123',
+            newPassword: 'NewValidPass123',
+            confirmPassword: 'NewValidPass123'
+          });
+
+        expect(response.status).toBe(401);
+      });
+
+      /**
+       * Test untuk password baru yang sama dengan password lama
+       */
+      it('should reject if new password same as current', async () => {
+        const response = await request(app.getHttpServer())
+          .put('/auth/password')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            currentPassword: testUser.password,
+            newPassword: testUser.password,
+            confirmPassword: testUser.password
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.newPassword).toBeDefined();
+      });
+    });
+
+    /**
+     * TEST AUTENTIKASI
+     * Menguji request tanpa autentikasi yang valid
+     */
+    it('should reject unauthenticated requests', async () => {
+      const response = await request(app.getHttpServer())
+        .put('/auth/password')
+        .send({
+          currentPassword: testUser.password,
+          newPassword: 'NewValidPass123',
+          confirmPassword: 'NewValidPass123'
+        });
+
+      expect(response.status).toBe(401);
+    });
+  });
+
 });

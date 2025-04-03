@@ -72,15 +72,33 @@ export class AuthValidation {
     });
 
     static readonly UPDATE_PASSWORD: ZodType = z.object({
-        currentPassword: z.string().min(1, { message: "Password saat ini harus diisi" }),
+        currentPassword: z.string().min(1, {
+            message: "Password saat ini harus diisi"
+        }),
         newPassword: z.string()
-            .min(8, { message: "Password baru harus minimal 8 karakter" })
+            .min(8, {
+                message: "Password baru harus minimal 8 karakter"
+            })
             .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
                 message: "Password baru harus mengandung minimal 1 huruf besar, 1 huruf kecil, dan 1 angka"
             }),
         confirmPassword: z.string()
-    }).refine(data => data.newPassword === data.confirmPassword, {
-        message: "Konfirmasi password tidak cocok"
+    }).superRefine((data, ctx) => {
+        if (data.newPassword === data.currentPassword) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Password baru tidak boleh sama dengan password saat ini",
+                path: ["newPassword"]
+            });
+        }
+
+        if (data.newPassword !== data.confirmPassword) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Konfirmasi password tidak cocok",
+                path: ["confirmPassword"]
+            });
+        }
     });
 
 }

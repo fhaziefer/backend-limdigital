@@ -1,5 +1,6 @@
 // src/auth/auth.service.ts
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { ZodError } from 'zod';
 import { ValidationService } from '../common/validation.service';
 import { AuthHelper } from './auth.helper';
 import { SessionService } from '../session/session.service';
@@ -234,6 +235,19 @@ export class AuthService {
                 passwordChangedAt: user.passwordChangedAt?.toISOString()
             };
         } catch (error) {
+            if (error instanceof ZodError) {
+                const validationErrors = {};
+                error.errors.forEach(err => {
+                    const path = err.path.join('.');
+                    validationErrors[path] = err.message;
+                });
+
+                throw new BadRequestException({
+                    statusCode: 400,
+                    message: 'Validasi gagal',
+                    errors: validationErrors
+                });
+            }
             this.errorHandler.handle(error);
         }
     }
