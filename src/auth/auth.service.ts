@@ -163,7 +163,7 @@ export class AuthService {
         userId: string,
         request: UpdatePasswordRequest,
         clientInfo: ClientInfo
-    ): Promise<AuthResponse> {
+    ): Promise<UpdatePasswordResponse> {
         try {
             // Validasi input
             const validated = this.validationService.validate(

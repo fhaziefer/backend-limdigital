@@ -38,7 +38,6 @@ export interface AuthResponse {
     token?: string;
     isActive?: boolean;
     createdAt?: string;
-    passwordChangedAt?: string;
 }
 
 export interface LogoutRequest {
@@ -59,7 +58,11 @@ export interface UpdatePasswordRequest {
 }
 
 export interface UpdatePasswordResponse {
-    success: boolean;
-    message: string;
-    timestamp: string;
+    id: string;
+    username: string;
+    email: string;
+    token?: string;
+    isActive?: boolean;
+    createdAt?: string;
+    passwordChangedAt?: string;
 }
