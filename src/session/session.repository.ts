@@ -83,4 +83,21 @@ export class SessionRepository {
         });
     }
 
+    /**
+    * Mark all active sessions as inactive for a user
+    * @param userId ID of user
+    */
+    async invalidateAllSessions(userId: string): Promise<{ count: number }> {
+        return this.prisma.session.updateMany({
+            where: {
+                userId,
+                isActive: true
+            },
+            data: {
+                isActive: false,
+                expiresAt: new Date() // Force immediate expiration
+            }
+        });
+    }
+
 }

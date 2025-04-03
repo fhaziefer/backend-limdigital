@@ -70,4 +70,17 @@ export class AuthValidation {
             // Validasi panjang password minimal 8 karakter
             .min(8, { message: "Password harus minimal 8 karakter" })
     });
+
+    static readonly UPDATE_PASSWORD: ZodType = z.object({
+        currentPassword: z.string().min(1, { message: "Password saat ini harus diisi" }),
+        newPassword: z.string()
+            .min(8, { message: "Password baru harus minimal 8 karakter" })
+            .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
+                message: "Password baru harus mengandung minimal 1 huruf besar, 1 huruf kecil, dan 1 angka"
+            }),
+        confirmPassword: z.string()
+    }).refine(data => data.newPassword === data.confirmPassword, {
+        message: "Konfirmasi password tidak cocok"
+    });
+
 }

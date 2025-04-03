@@ -65,6 +65,15 @@ export class SessionService implements OnModuleInit {
     }
 
     /**
+     * Invalidate all active sessions for a user
+     * @param userId ID of user
+     */
+    async invalidateAllSessions(userId: string): Promise<void> {
+        await this.repository.invalidateAllSessions(userId);
+        this.logger.log(`Semua session dinonaktifkan untuk user ${userId}`);
+    }
+
+    /**
      * Menghitung waktu kadaluarsa session (jam 00:00 hari berikutnya)
      * @returns Date Waktu kadaluarsa
      */

@@ -1,9 +1,9 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Post, Req, Headers, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Req, Headers, Delete, Put, BadRequestException } from '@nestjs/common';
 // Import service dan komponen pendukung
 import { AuthService } from './auth.service';
 import { WebResponseBuilder } from '../model/web.model';
-import { LoginAuthRequest, RegisterAuthRequest } from '../model/auth.model';
+import { LoginAuthRequest, RegisterAuthRequest, UpdatePasswordRequest } from '../model/auth.model';
 import { Request } from 'express';
 import { ClientHelper } from '../helpers/client.helper';
 import { User } from '../model/user.model';
@@ -46,21 +46,33 @@ export class AuthController {
         return WebResponseBuilder.successCreated(result, 'Login successful');
     }
 
-        /**
-     * Endpoint POST /api/logout for user logout
+    /**
+     * Endpoint DELETE /api/logout for user logout
      * @param user Authenticated user from @Auth decorator
      * @param authorization Authorization header with Bearer token
      * @param req Request object for client info
      * @returns Standard web response
      */
-        @Delete('/logout')
-        async logout(
-            @Auth() user: User,
-            @Headers('authorization') authorization: string,
-            @Req() req: Request,
-        ) {
-            const clientInfo = this.clientHelper.extractClientInfo(req);
-            const result = await this.authService.logout(user.id, authorization, clientInfo);
-            return WebResponseBuilder.successCreated(result, 'Logout successful');
-        }
+    @Delete('/logout')
+    async logout(
+        @Auth() user: User,
+        @Headers('authorization') authorization: string,
+        @Req() req: Request,
+    ) {
+        const clientInfo = this.clientHelper.extractClientInfo(req);
+        const result = await this.authService.logout(user.id, authorization, clientInfo);
+        return WebResponseBuilder.successOk(result, 'Logout successful');
+    }
+
+    @Put('/password')
+    async updatePassword(
+        @Auth() user: User,
+        @Body() request: UpdatePasswordRequest,
+        @Req() req: Request
+    ) {
+        const clientInfo = this.clientHelper.extractClientInfo(req);
+        const result = await this.authService.updatePassword(user.id, request, clientInfo);
+        return WebResponseBuilder.successCreated(result, 'Password berhasil diperbarui');
+    }
+
 }

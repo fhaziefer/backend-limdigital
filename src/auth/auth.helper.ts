@@ -9,7 +9,7 @@ export class AuthHelper {
     // Jumlah round untuk bcrypt hashing
     private readonly BCRYPT_SALT_ROUNDS = 10;
 
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     /**
      * Validasi kredensial login user
@@ -20,13 +20,13 @@ export class AuthHelper {
     async validateCredentials({ username, password }: LoginAuthRequest) {
         const user = await this.prisma.user.findUnique({
             where: { username },
-            select: { 
-                id: true, 
-                username: true, 
-                email: true, 
-                passwordHash: true, 
-                isActive: true, 
-                createdAt: true 
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                passwordHash: true,
+                isActive: true,
+                createdAt: true
             },
         });
 
@@ -55,8 +55,8 @@ export class AuthHelper {
 
         if (existing) {
             throw new ConflictException(
-                existing.email === email 
-                    ? 'Email sudah digunakan' 
+                existing.email === email
+                    ? 'Email sudah digunakan'
                     : 'Username sudah terdaftar'
             );
         }
@@ -70,4 +70,18 @@ export class AuthHelper {
     async hashPassword(password: string): Promise<string> {
         return bcrypt.hash(password, this.BCRYPT_SALT_ROUNDS);
     }
+
+    /**
+     * Verify if plain text password matches hashed password
+     * @param plainText Password to verify
+     * @param hashedPassword Hashed password to compare against
+     * @returns Promise<boolean> True if matches
+     */
+    async verifyPassword(
+        plainText: string,
+        hashedPassword: string
+    ): Promise<boolean> {
+        return bcrypt.compare(plainText, hashedPassword);
+    }
+
 }
