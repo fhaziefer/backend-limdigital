@@ -10,7 +10,7 @@ import { ValidationService } from './validation.service';
 import { APP_FILTER } from '@nestjs/core';
 import { ErrorFilter } from './error.filter';
 import { ClientHelper } from '../helpers/client.helper';
-import HijriHelper from 'src/helpers/hijri.helper';
+import HijriHelper from '../helpers/hijri.helper';
 import { PrismaErrorHandler } from './error/prisma.error.handler';
 import { AuthMiddleware } from './auth.middleware';
 

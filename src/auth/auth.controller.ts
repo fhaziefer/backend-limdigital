@@ -6,8 +6,8 @@ import { WebResponseBuilder } from '../model/web.model';
 import { LoginAuthRequest, RegisterAuthRequest } from '../model/auth.model';
 import { Request } from 'express';
 import { ClientHelper } from '../helpers/client.helper';
-import { User } from 'src/model/user.model';
-import { Auth } from 'src/common/auth.decorator';
+import { User } from '../model/user.model';
+import { Auth } from '../common/auth.decorator';
 
 // Deklarasi controller dengan base route '/auth'
 @Controller('/auth')

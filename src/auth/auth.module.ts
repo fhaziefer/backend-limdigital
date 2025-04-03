@@ -6,9 +6,9 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 // Import common module containing shared providers
 // Import modul common yang berisi shared providers
-import { CommonModule } from "src/common/common.module";
+import { CommonModule } from "../common/common.module";
 import { AuthHelper } from "./auth.helper";
-import { SessionModule } from "src/session/session.module";
+import { SessionModule } from "../session/session.module";
 
 /**
  * Auth Module - Responsible for authentication related functionality
