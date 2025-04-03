@@ -101,34 +101,16 @@ export class CommonModule implements NestModule {
         consumer
             .apply(AuthMiddleware)
             .exclude(
-                // Exclude all routes under /auth
-                // Pengecualian semua rute di bawah /auth
-                { path: 'auth', method: RequestMethod.ALL },
-                { path: 'auth/(.*)', method: RequestMethod.ALL },
+                // Exclude all auth routes except logout
+                // Pengecualian semua rute auth kecuali logout 
+                { path: 'auth/register', method: RequestMethod.POST },
+                { path: 'auth/login', method: RequestMethod.POST },
 
                 // Exclude all public routes
                 // Pengecualian semua rute public
+                { path: 'public', method: RequestMethod.ALL },
                 { path: 'public/(.*)', method: RequestMethod.ALL }
             )
             .forRoutes('*');
-
-        /**
-         * Second middleware layer: Specific override
-         * Re-apply AuthMiddleware specifically to:
-         * - DELETE /auth/logout route
-         * 
-         * Note: This overrides the previous exclusion for this specific route
-         * 
-         * Lapisan middleware kedua: Override spesifik
-         * Terapkan kembali AuthMiddleware khusus untuk:
-         * - Rute DELETE /auth/logout
-         * 
-         * Catatan: Ini mengesampingkan pengecualian sebelumnya untuk rute spesifik ini
-         */
-        consumer
-            .apply(AuthMiddleware)
-            .forRoutes(
-                { path: 'auth/logout', method: RequestMethod.DELETE }
-            );
     }
 }
