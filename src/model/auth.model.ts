@@ -29,6 +29,7 @@ export interface LoginAuthRequest {
  * @property token - Token session (opsional)
  * @property isActive - Status aktif user
  * @property createdAt - Waktu pembuatan akun
+ * @property passwordChangedAt - Waktu perubahan password
  */
 export interface AuthResponse {
     id: string;
