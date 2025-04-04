@@ -8,16 +8,21 @@ import { PrismaErrorHandler } from '../common/error/prisma.error.handler';
 import { AuthValidation } from './auth.validation';
 import { RegisterAuthRequest, LoginAuthRequest, AuthResponse, LogoutResponse, UpdatePasswordRequest, UpdatePasswordResponse } from '../model/auth.model';
 import { ClientInfo } from '../model/session.model';
+import * as otpGenerator from 'otp-generator';
+import { MailService } from '../common/mail.service';
 import { PrismaService } from '../common/prisma.service';
 
 @Injectable()
 export class AuthService {
+    private readonly OTP_LENGTH = 6;
+    private readonly OTP_EXPIRY_MINUTES = 15;
     constructor(
         private readonly validationService: ValidationService,
         private readonly authHelper: AuthHelper,
         private readonly sessionService: SessionService,
         private readonly errorHandler: PrismaErrorHandler,
-        private readonly prisma: PrismaService,
+        private readonly prismaService: PrismaService,
+        private readonly mailService: MailService,
     ) { }
 
     /**
@@ -42,7 +47,7 @@ export class AuthService {
             const hashedPassword = await this.authHelper.hashPassword(validated.password);
 
             // Buat user baru
-            const user = await this.prisma.user.create({
+            const user = await this.prismaService.user.create({
                 data: {
                     username: validated.username,
                     email: validated.email,
@@ -127,7 +132,7 @@ export class AuthService {
             const token = sessionToken.replace('Bearer ', '');
 
             // Delete the session from database
-            const deletedSession = await this.prisma.session.deleteMany({
+            const deletedSession = await this.prismaService.session.deleteMany({
                 where: {
                     userId,
                     sessionToken: token,
@@ -172,7 +177,7 @@ export class AuthService {
             );
 
             // Get user with password hash
-            const user = await this.prisma.user.findUnique({
+            const user = await this.prismaService.user.findUnique({
                 where: { id: userId },
                 select: {
                     id: true,
@@ -213,7 +218,7 @@ export class AuthService {
             const newPasswordHash = await this.authHelper.hashPassword(validated.newPassword);
 
             // Update password
-            await this.prisma.user.update({
+            await this.prismaService.user.update({
                 where: { id: userId },
                 data: {
                     passwordHash: newPasswordHash,

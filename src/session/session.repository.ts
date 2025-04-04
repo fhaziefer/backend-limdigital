@@ -6,7 +6,7 @@ import { ClientInfo } from '../model/session.model';
 
 @Injectable()
 export class SessionRepository {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prismaService: PrismaService) { }
 
     /**
      * Membuat session baru di database
@@ -14,7 +14,7 @@ export class SessionRepository {
      * @returns Promise<SessionInfo> Data session yang baru dibuat
      */
     async create(data: Omit<SessionInfo, 'id' | 'createdAt'>): Promise<SessionInfo> {
-        return this.prisma.session.create({
+        return this.prismaService.session.create({
             data: {
                 ...data,
                 createdAt: new Date(),
@@ -29,7 +29,7 @@ export class SessionRepository {
      * @returns Promise<{count: number}> Jumlah session yang dihapus
      */
     async deleteExpiredSessions(date: Date): Promise<{ count: number }> {
-        return this.prisma.session.deleteMany({
+        return this.prismaService.session.deleteMany({
             where: { expiresAt: { lte: date } },
         });
     }
@@ -41,7 +41,7 @@ export class SessionRepository {
      * @returns Promise<{count: number}> Jumlah session yang dihapus
      */
     async deleteExpiredSessionsForUser(userId: string, date: Date): Promise<{ count: number }> {
-        return this.prisma.session.deleteMany({
+        return this.prismaService.session.deleteMany({
             where: { userId, expiresAt: { lte: date } },
         });
     }
@@ -53,7 +53,7 @@ export class SessionRepository {
  * @returns Session yang aktif dan belum expired, atau null jika tidak ditemukan
  */
     async findExistingSession(userId: string, clientInfo: Partial<ClientInfo>) {
-        return this.prisma.session.findFirst({
+        return this.prismaService.session.findFirst({
             where: {
                 userId,
                 ipAddress: clientInfo.ipAddress,       // Cocokkan IP Address
@@ -74,7 +74,7 @@ export class SessionRepository {
      * @returns Session yang sudah diperbarui
      */
     async updateSessionExpiry(sessionId: number, expiresAt: Date) {
-        return this.prisma.session.update({
+        return this.prismaService.session.update({
             where: { id: sessionId },
             data: {
                 expiresAt,                            // Update waktu kadaluarsa
@@ -88,7 +88,7 @@ export class SessionRepository {
     * @param userId ID of user
     */
     async invalidateAllSessions(userId: string): Promise<{ count: number }> {
-        return this.prisma.session.updateMany({
+        return this.prismaService.session.updateMany({
             where: {
                 userId,
                 isActive: true

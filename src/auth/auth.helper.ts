@@ -9,7 +9,7 @@ export class AuthHelper {
     // Jumlah round untuk bcrypt hashing
     private readonly BCRYPT_SALT_ROUNDS = 10;
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prismaService: PrismaService) { }
 
     /**
      * Validasi kredensial login user
@@ -18,7 +18,7 @@ export class AuthHelper {
      * @returns User data jika valid
      */
     async validateCredentials({ username, password }: LoginAuthRequest) {
-        const user = await this.prisma.user.findUnique({
+        const user = await this.prismaService.user.findUnique({
             where: { username },
             select: {
                 id: true,
@@ -49,7 +49,7 @@ export class AuthHelper {
      * @throws ConflictException Jika data sudah ada
      */
     async checkExistingUser({ email, username }: RegisterAuthRequest) {
-        const existing = await this.prisma.user.findFirst({
+        const existing = await this.prismaService.user.findFirst({
             where: { OR: [{ email }, { username }] },
         });
 
