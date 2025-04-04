@@ -11,6 +11,7 @@ import { ClientInfo } from '../model/session.model';
 import * as otpGenerator from 'otp-generator';
 import { MailService } from '../common/mail.service';
 import { PrismaService } from '../common/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
         private readonly errorHandler: PrismaErrorHandler,
         private readonly prismaService: PrismaService,
         private readonly mailService: MailService,
+        private readonly configService: ConfigService,
     ) { }
 
     /**
@@ -298,6 +300,7 @@ export class AuthService {
     // Kirim email verifikasi
     async sendVerificationEmail(userId: string): Promise<void> {
         const otp = await this.generateAndSaveOtp(userId);
+        const appName = this.configService.get<string>('APP_NAME');
 
         // Get user
         const user = await this.prismaService.user.findUnique({
@@ -307,7 +310,8 @@ export class AuthService {
                 username: true,
                 email: true,
                 isActive: true,
-                emailVerified: true
+                emailVerified: true,
+                profile: true
             }
         });
 
@@ -320,9 +324,11 @@ export class AuthService {
             'Test',
             'verification',
             {
-                username: user.username,
+                username: user.profile?.fullName,
                 otp,
-                expiryMinutes: this.OTP_EXPIRY_MINUTES
+                expiryMinutes: this.OTP_EXPIRY_MINUTES,
+                appName,
+                currentYear: new Date().getFullYear()
             }
         );
     }
