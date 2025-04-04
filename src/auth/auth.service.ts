@@ -257,4 +257,116 @@ export class AuthService {
         }
     }
 
+    // Generate OTP dan simpan ke database
+    private async generateAndSaveOtp(userId: string): Promise<string> {
+        const otp = otpGenerator.generate(this.OTP_LENGTH, {
+            digits: true,
+            lowerCaseAlphabets: false,
+            upperCaseAlphabets: false,
+            specialChars: false,
+        });
+
+        const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
+
+        // Get user
+        const user = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                isActive: true,
+                emailVerified: true
+            }
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('User tidak ditemukan');
+        }
+
+        await this.prismaService.user.update({
+            where: { id: user.id },
+            data: {
+                verificationToken: otp,
+                verificationExpires: expiresAt,
+            },
+        });
+
+        return otp;
+    }
+
+    // Kirim email verifikasi
+    async sendVerificationEmail(userId: string): Promise<void> {
+        const otp = await this.generateAndSaveOtp(userId);
+
+        // Get user
+        const user = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                isActive: true,
+                emailVerified: true
+            }
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('User tidak ditemukan');
+        }
+
+        await this.mailService.sendEmail(
+            user.email,
+            'Test',
+            'verification',
+            {
+                username: user.username,
+                otp,
+                expiryMinutes: this.OTP_EXPIRY_MINUTES
+            }
+        );
+    }
+
+    // Verifikasi OTP
+    async verifyEmail(userId: string, otp: string): Promise<boolean> {
+        const user = await this.prismaService.user.findUnique({ where: { id: userId } });
+
+        // Validasi: pastikan user, verificationToken, dan verificationExpires ada
+        if (
+            !user ||
+            !user.verificationToken ||
+            !user.verificationExpires ||
+            user.verificationToken !== otp
+        ) {
+            return false;
+        }
+
+        // Validasi: cek apakah OTP sudah kadaluarsa
+        if (new Date(user.verificationExpires) < new Date()) {
+            return false;
+        }
+
+        // Update status verifikasi
+        await this.prismaService.user.update({
+            where: { email: user.email },
+            data: {
+                emailVerified: true,
+                verificationToken: null,
+                verificationExpires: null,
+            },
+        });
+
+        return true;
+    }
+
+    // Cek status verifikasi
+    async checkVerificationStatus(userId: string): Promise<{ verified: boolean }> {
+        const user = await this.prismaService.user.findUnique({
+            where: { id: userId },
+            select: { emailVerified: true },
+        });
+
+        return { verified: user?.emailVerified || false };
+    }
+
 }

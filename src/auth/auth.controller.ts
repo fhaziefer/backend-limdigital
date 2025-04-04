@@ -1,5 +1,5 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Post, Req, Headers, Delete, Put, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Post, Req, Headers, Delete, Put, Get, Query } from '@nestjs/common';
 // Import service dan komponen pendukung
 import { AuthService } from './auth.service';
 import { WebResponseBuilder } from '../model/web.model';
@@ -73,6 +73,39 @@ export class AuthController {
         const clientInfo = this.clientHelper.extractClientInfo(req);
         const result = await this.authService.updatePassword(user.id, request, clientInfo);
         return WebResponseBuilder.successCreated(result, 'Password berhasil diperbarui');
+    }
+
+    @Post('/send-verification')
+    async sendVerification(
+        @Auth() user: User,
+    ) {
+        const result = await this.authService.sendVerificationEmail(user.id);
+        return WebResponseBuilder.successOk(result, 'Email verifikasi telah dikirim');
+    }
+
+    @Post('/verify-email')
+    async verifyEmail(
+        @Auth() user: User,
+        @Body('otp') otp: string,
+    ) {
+        const isValid = await this.authService.verifyEmail(user.id, otp);
+
+        if (!isValid) {
+            return WebResponseBuilder.badRequest('OTP tidak valid atau sudah kadaluarsa');
+        }
+
+        return WebResponseBuilder.successOk(
+            { email: user.email, verified: true },
+            'Email berhasil diverifikasi',
+        );
+    }
+
+    @Get('/check-verification')
+    async checkVerification(
+        @Auth() user: User,
+    ) {
+        const result = await this.authService.checkVerificationStatus(user.id);
+        return WebResponseBuilder.successOk(result, 'Status verifikasi email');
     }
 
 }

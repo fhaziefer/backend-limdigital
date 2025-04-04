@@ -9,6 +9,7 @@ import { AuthController } from "./auth.controller";
 import { CommonModule } from "../common/common.module";
 import { AuthHelper } from "./auth.helper";
 import { SessionModule } from "../session/session.module";
+import { MailService } from "src/common/mail.service";
 
 /**
  * Auth Module - Responsible for authentication related functionality
@@ -45,7 +46,7 @@ import { SessionModule } from "../session/session.module";
      * - AuthService: layanan autentikasi utama
      * - AuthHelper: utilitas bantuan autentikasi
      */
-    providers: [AuthService, AuthHelper],
+    providers: [AuthService, AuthHelper, MailService],
 
     /**
      * Module Exports (if needed):
@@ -54,7 +55,7 @@ import { SessionModule } from "../session/session.module";
      * Ekspor Modul (jika diperlukan):
      * - AuthService: jika modul lain perlu menggunakannya
      */
-    exports: [AuthService],
+    exports: [AuthService, MailService],
 
     /**
      * Module Controllers:
