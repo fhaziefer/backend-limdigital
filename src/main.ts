@@ -14,10 +14,18 @@ async function bootstrap() {
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER); // Dapatkan logger instance
   app.useLogger(logger); // Set logger sebagai logger global aplikasi
 
-  // 3. Start aplikasi
+  // 4. Setting Cors
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  });
+
+  // 4. Start aplikasi
   await app.listen(process.env.PORT ?? 3000); // Gunakan PORT dari env atau default 3000
   
-  // 4. Log informasi startup
+  // 5. Log informasi startup
   console.log(`App running on PORT: ${process.env.PORT || 3000}`);
 }
 
