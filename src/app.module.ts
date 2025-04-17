@@ -6,6 +6,9 @@ import { CommonModule } from './common/common.module'; // Modul untuk shared ser
 import { AuthModule } from './auth/auth.module'; // Modul untuk fitur autentikasi
 import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
+import { UndanganModule } from './undangan/undangan.module';
+import { PdfModule } from './pdf/pdf.module';
+import { StampModule } from './stamp/stamp.module';
 
 @Module({
   imports: [
@@ -16,8 +19,12 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true, // agar bisa diakses di seluruh aplikasi
       envFilePath: '.env' // baca file .env
     }),
+    UndanganModule,
+    PdfModule,
+    StampModule
   ],
   controllers: [], // Tidak ada controller di root module
   providers: [],   // Tidak ada provider di root module
+  exports: [StampModule, PdfModule, UndanganModule]
 })
 export class AppModule { }

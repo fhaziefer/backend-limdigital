@@ -5,10 +5,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 // Import Winston logger provider
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   // 1. Membuat instance aplikasi NestJS
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // 2. Konfigurasi logger global
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER); // Dapatkan logger instance
@@ -22,9 +24,14 @@ async function bootstrap() {
     credentials: true
   });
 
+  // Serve static files
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+
   // 4. Start aplikasi
   await app.listen(process.env.PORT ?? 3000); // Gunakan PORT dari env atau default 3000
-  
+
   // 5. Log informasi startup
   console.log(`App running on PORT: ${process.env.PORT || 3000}`);
 }
