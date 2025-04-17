@@ -64,17 +64,32 @@ export class PdfService {
     }
 
     private async getDriveService(): Promise<drive_v3.Drive> {
-        const auth = new google.auth.GoogleAuth({
-            keyFile: this.configService.get('GOOGLE_DRIVE_KEY_FILE'),
-            // keyFile: this.configService.get('GOOGLE_CREDENTIAL'),
-            scopes: ['https://www.googleapis.com/auth/drive.file'],
-        });
 
-        const authClient = await auth.getClient() as any; // Type workaround
-        return google.drive({
-            version: 'v3',
-            auth: authClient as any, // Type workaround
-        });
+        const credentialString = this.configService.get<string>('GOOGLE_CREDENTIAL');
+
+        if (!credentialString) {
+            throw new Error('Google Drive credentials not configured');
+        }
+
+        try {
+            const credentials = JSON.parse(credentialString);
+
+            // Gunakan langsung OAuth2Client jika memungkinkan
+            const authClient = new google.auth.JWT({
+                email: credentials.client_email,
+                key: credentials.private_key,
+                scopes: ['https://www.googleapis.com/auth/drive.file'],
+            });
+
+            await authClient.authorize();
+
+            return google.drive({
+                version: 'v3',
+                auth: authClient,
+            });
+        } catch (error) {
+            throw new Error(`Failed to initialize Google Drive: ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     private async uploadFileToDrive(
