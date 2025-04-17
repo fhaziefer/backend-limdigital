@@ -83,3 +83,6 @@ shrinkwrap.json
 *.local
 *.bak
 *.tmp
+
+# Uploads Folder
+uploads/

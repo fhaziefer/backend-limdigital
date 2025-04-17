@@ -2,7 +2,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PdfService } from '../pdf/pdf.service';
-import { CreateUndanganDto } from './dto/create-undangan.dto';
+import { CreateUndanganRequest } from 'src/model/letter.model';
 
 @Injectable()
 export class UndanganService {
@@ -15,13 +15,13 @@ export class UndanganService {
         'default': 'الإدارة المنطقية لجنة إتحاد المبلغين'
     };
 
-    async generateUndangan(createUndanganDto: CreateUndanganDto) {
+    async generateUndangan(createUndanganRequest: CreateUndanganRequest) {
         // Format data untuk template
 
-        const arabic = this.arabicTitles[createUndanganDto.tingkatKepengurusan] || this.arabicTitles.default;
+        const arabic: String = this.arabicTitles[createUndanganRequest.tingkatKepengurusan] || this.arabicTitles.default;
 
         const templateData = {
-            ...createUndanganDto, arabic,
+            ...createUndanganRequest, arabic,
             tanggalPembuatan: new Date().toLocaleDateString('id-ID', {
                 day: 'numeric',
                 month: 'long',
