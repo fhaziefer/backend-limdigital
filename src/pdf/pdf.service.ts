@@ -65,8 +65,8 @@ export class PdfService {
 
     private async getDriveService(): Promise<drive_v3.Drive> {
         const auth = new google.auth.GoogleAuth({
-            // keyFile: this.configService.get('GOOGLE_DRIVE_KEY_FILE'),
-            keyFile: this.configService.get('GOOGLE_CREDENTIAL'),
+            keyFile: this.configService.get('GOOGLE_DRIVE_KEY_FILE'),
+            // keyFile: this.configService.get('GOOGLE_CREDENTIAL'),
             scopes: ['https://www.googleapis.com/auth/drive.file'],
         });
 
