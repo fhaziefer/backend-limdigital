@@ -1,6 +1,6 @@
 // src/pdf/pdf.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
@@ -12,6 +12,7 @@ import { google, drive_v3 } from 'googleapis';
 
 @Injectable()
 export class PdfService {
+    private readonly logger = new Logger(PdfService.name);
     private readonly templateDir = path.join(__dirname, '../../templates/letters');
     private readonly assetDir = path.join(__dirname, '../../src/assets');
     private readonly uploadDir = path.join(__dirname, '../../uploads');
@@ -23,21 +24,27 @@ export class PdfService {
         private stampService: StampService,
     ) {
         this.registerPartials();
-        this.ensureDirectoriesExist().catch(err => {
-            console.error('Failed to initialize directories:', err);
+        this.initializeDirectories().catch(err => {
+            this.logger.error('Failed to initialize directories', err);
         });
     }
 
-    private async ensureDirectoriesExist(): Promise<void> {
+    private async initializeDirectories(): Promise<void> {
         try {
-            await fs.promises.mkdir(this.pdfDir, { recursive: true });
-            await fs.promises.mkdir(this.imageDir, { recursive: true });
-            console.log('Directories verified/created successfully:', {
+            await Promise.all([
+                fs.promises.mkdir(this.pdfDir, { recursive: true }),
+                fs.promises.mkdir(this.imageDir, { recursive: true })
+            ]);
+            
+            this.logger.log('Directories initialized successfully', {
                 pdfDir: this.pdfDir,
                 imageDir: this.imageDir
             });
         } catch (error) {
-            console.error('Failed to create directories:', error);
+            this.logger.error('Failed to initialize directories', {
+                error: error.message,
+                stack: error.stack
+            });
             throw error;
         }
     }
@@ -50,7 +57,10 @@ export class PdfService {
             const imageBuffer = await fs.promises.readFile(fullPath);
             return imageBuffer.toString('base64');
         } catch (error) {
-            console.error(`Error accessing/reading image at ${fullPath}:`, error);
+            this.logger.error(`Failed to encode image: ${fullPath}`, {
+                error: error.message,
+                stack: error.stack
+            });
             return '';
         }
     }
@@ -59,13 +69,18 @@ export class PdfService {
         const partialsDir = path.join(this.templateDir, 'partials');
 
         try {
-            fs.readdirSync(partialsDir).forEach(file => {
+            const partialFiles = fs.readdirSync(partialsDir);
+            partialFiles.forEach(file => {
                 const partialName = path.basename(file, '.hbs');
                 const partialContent = fs.readFileSync(path.join(partialsDir, file), 'utf8');
                 handlebars.registerPartial(partialName, partialContent);
             });
+            this.logger.log(`Registered ${partialFiles.length} partial templates`);
         } catch (error) {
-            console.error('Error registering partials:', error);
+            this.logger.error('Failed to register partials', {
+                error: error.message,
+                stack: error.stack
+            });
         }
     }
 
@@ -73,7 +88,9 @@ export class PdfService {
         const credentialString = this.configService.get<string>('GOOGLE_CREDENTIAL');
 
         if (!credentialString) {
-            throw new Error('Google Drive credentials not configured');
+            const error = new Error('Google Drive credentials not configured');
+            this.logger.error(error.message);
+            throw error;
         }
 
         try {
@@ -85,9 +102,15 @@ export class PdfService {
             });
 
             await authClient.authorize();
+            this.logger.log('Google Drive service authenticated successfully');
+            
             return google.drive({ version: 'v3', auth: authClient });
         } catch (error) {
-            throw new Error(`Failed to initialize Google Drive: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error('Failed to initialize Google Drive service', {
+                error: error.message,
+                stack: error.stack
+            });
+            throw new Error(`Failed to initialize Google Drive: ${error.message}`);
         }
     }
 
@@ -98,16 +121,17 @@ export class PdfService {
         isPdf: boolean
     ): Promise<string | null> {
         try {
-            // Verify file exists before uploading
             await fs.promises.access(filePath, fs.constants.R_OK);
-            
             const driveService = await this.getDriveService();
+            
             const folderId = isPdf
                 ? this.configService.get('GOOGLE_DRIVE_PDF_FOLDER_ID')
                 : this.configService.get('GOOGLE_DRIVE_IMAGE_FOLDER_ID');
 
             if (!folderId) {
-                throw new Error(`Google Drive folder ID for ${isPdf ? 'PDF' : 'Image'} is not configured`);
+                const error = new Error(`Google Drive folder ID for ${isPdf ? 'PDF' : 'Image'} not configured`);
+                this.logger.error(error.message);
+                throw error;
             }
 
             const fileMetadata = {
@@ -119,6 +143,12 @@ export class PdfService {
                 mimeType,
                 body: fs.createReadStream(filePath),
             };
+
+            this.logger.log(`Uploading ${isPdf ? 'PDF' : 'Image'} to Google Drive`, {
+                filePath,
+                fileName,
+                folderId
+            });
 
             const response = await driveService.files.create({
                 requestBody: fileMetadata,
@@ -134,9 +164,19 @@ export class PdfService {
                 },
             });
 
-            return `https://drive.google.com/file/d/${response.data.id}/view`;
+            const fileUrl = `https://drive.google.com/file/d/${response.data.id}/view`;
+            this.logger.log(`File uploaded successfully to Google Drive`, {
+                fileUrl,
+                fileId: response.data.id
+            });
+
+            return fileUrl;
         } catch (error) {
-            console.error(`Error uploading ${isPdf ? 'PDF' : 'Image'} to Google Drive:`, error);
+            this.logger.error(`Failed to upload ${isPdf ? 'PDF' : 'Image'} to Google Drive`, {
+                error: error.message,
+                stack: error.stack,
+                filePath
+            });
             return null;
         }
     }
@@ -147,14 +187,20 @@ export class PdfService {
         drivePdfUrl?: string;
         driveImageUrl?: string;
     }> {
-        try {
-            // Verify directories exist
-            await this.ensureDirectoriesExist();
+        this.logger.log('Starting PDF and image generation process', {
+            nomorSurat: data.nomorSurat
+        });
 
+        try {
+            // Verify and create directories if needed
+            await this.initializeDirectories();
+
+            // Prepare stamp data
             const dateNow = new Date();
             const formattedDate = formatFullDate(dateNow);
             const stampText = `Surat nomor ${data.nomorSurat} resmi diterbitkan oleh ${data.tingkatKepengurusan} Lembaga Ittihadul Muballighin ${data.daerahKepengurusan} pada ${formattedDate}`;
             
+            this.logger.log('Generating dynamic stamp');
             const dynamicStampBuffer = await this.stampService.generateQRCodeWithStamp(
                 stampText, 
                 data.tingkatKepengurusan.toUpperCase(), 
@@ -163,6 +209,7 @@ export class PdfService {
             const dynamicStampBase64 = dynamicStampBuffer.toString('base64');
 
             // Compile template
+            this.logger.log('Compiling template');
             const images = {
                 logoBase64: await this.encodeImageToBase64('images/logo_lim.png'),
                 ketuaBase64: dynamicStampBase64,
@@ -177,74 +224,88 @@ export class PdfService {
             const html = template(templateData);
 
             // Generate PDF and image
+            this.logger.log('Launching Puppeteer browser');
             const browser = await puppeteer.launch({
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'],
             });
-            const page = await browser.newPage();
 
-            await page.setViewport({
-                width: 793,
-                height: 1122,
-                deviceScaleFactor: 2
-            });
+            try {
+                const page = await browser.newPage();
+                await page.setViewport({
+                    width: 793,
+                    height: 1122,
+                    deviceScaleFactor: 2
+                });
 
-            await page.setContent(html, { waitUntil: 'networkidle0' });
+                this.logger.log('Generating PDF and screenshot');
+                await page.setContent(html, { waitUntil: 'networkidle0' });
 
-            const [pdfBuffer, imageBuffer] = await Promise.all([
-                page.pdf({ format: 'A4', printBackground: true }),
-                page.screenshot({ type: 'png', fullPage: true })
-            ]);
-
-            await browser.close();
-
-            // Save files locally
-            const timestamp = Date.now();
-            const pdfFilename = `undangan_${timestamp}.pdf`;
-            const imageFilename = `undangan_${timestamp}.png`;
-            const pdfPath = path.join(this.pdfDir, pdfFilename);
-            const imagePath = path.join(this.imageDir, imageFilename);
-
-            await Promise.all([
-                fs.promises.writeFile(pdfPath, pdfBuffer).then(() => {
-                    console.log(`PDF successfully saved to: ${pdfPath}`);
-                }),
-                fs.promises.writeFile(imagePath, imageBuffer).then(() => {
-                    console.log(`Image successfully saved to: ${imagePath}`);
-                })
-            ]);
-
-            // Verify files were written
-            await fs.promises.access(pdfPath, fs.constants.R_OK);
-            await fs.promises.access(imagePath, fs.constants.R_OK);
-
-            // Prepare local URLs
-            const baseUrl = this.configService.get('BASE_URL') || 'http://localhost:3000';
-            const localPdfUrl = `${baseUrl}/uploads/documents/${pdfFilename}`;
-            const localImageUrl = `${baseUrl}/uploads/images/${imageFilename}`;
-
-            // Upload to Google Drive if enabled
-            let drivePdfUrl: string | undefined;
-            let driveImageUrl: string | undefined;
-
-            if (this.configService.get('GOOGLE_DRIVE_ENABLED') === 'true') {
-                const [pdfResult, imageResult] = await Promise.all([
-                    this.uploadFileToDrive(pdfPath, pdfFilename, 'application/pdf', true),
-                    this.uploadFileToDrive(imagePath, imageFilename, 'image/png', false)
+                const [pdfBuffer, imageBuffer] = await Promise.all([
+                    page.pdf({ format: 'A4', printBackground: true }),
+                    page.screenshot({ type: 'png', fullPage: true })
                 ]);
 
-                drivePdfUrl = pdfResult || undefined;
-                driveImageUrl = imageResult || undefined;
-            }
+                // Save files locally
+                const timestamp = Date.now();
+                const pdfFilename = `undangan_${timestamp}.pdf`;
+                const imageFilename = `undangan_${timestamp}.png`;
+                const pdfPath = path.join(this.pdfDir, pdfFilename);
+                const imagePath = path.join(this.imageDir, imageFilename);
 
-            return {
-                localPdfUrl,
-                localImageUrl,
-                drivePdfUrl,
-                driveImageUrl
-            };
+                this.logger.log('Saving files locally', { pdfPath, imagePath });
+                await Promise.all([
+                    fs.promises.writeFile(pdfPath, pdfBuffer),
+                    fs.promises.writeFile(imagePath, imageBuffer)
+                ]);
+
+                // Verify files were written
+                await Promise.all([
+                    fs.promises.access(pdfPath, fs.constants.R_OK),
+                    fs.promises.access(imagePath, fs.constants.R_OK)
+                ]);
+
+                // Prepare URLs
+                const baseUrl = this.configService.get('BASE_URL') || 'http://localhost:3000';
+                const localPdfUrl = `${baseUrl}/uploads/documents/${pdfFilename}`;
+                const localImageUrl = `${baseUrl}/uploads/images/${imageFilename}`;
+
+                let drivePdfUrl: string | undefined;
+                let driveImageUrl: string | undefined;
+
+                if (this.configService.get('GOOGLE_DRIVE_ENABLED') === 'true') {
+                    this.logger.log('Google Drive upload enabled - starting upload');
+                    const [pdfResult, imageResult] = await Promise.all([
+                        this.uploadFileToDrive(pdfPath, pdfFilename, 'application/pdf', true),
+                        this.uploadFileToDrive(imagePath, imageFilename, 'image/png', false)
+                    ]);
+
+                    drivePdfUrl = pdfResult || undefined;
+                    driveImageUrl = imageResult || undefined;
+                }
+
+                this.logger.log('PDF and image generation completed successfully', {
+                    localPdfUrl,
+                    localImageUrl,
+                    drivePdfUrl: !!drivePdfUrl,
+                    driveImageUrl: !!driveImageUrl
+                });
+
+                return {
+                    localPdfUrl,
+                    localImageUrl,
+                    drivePdfUrl,
+                    driveImageUrl
+                };
+            } finally {
+                await browser.close();
+            }
         } catch (error) {
-            console.error('Error in generatePdfAndImage:', error);
+            this.logger.error('Failed to generate PDF and image', {
+                error: error.message,
+                stack: error.stack,
+                nomorSurat: data.nomorSurat
+            });
             throw error;
         }
     }
