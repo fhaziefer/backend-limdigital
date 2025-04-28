@@ -1,6 +1,8 @@
 export interface CreateUndanganRequest {
     tingkatKepengurusan: string;
     daerahKepengurusan: string;
+    jabatanKetua: string;
+    jabatanSekretaris: string;
     namaKetua: string;
     namaSekretaris: string;
     nomorSurat: string;

@@ -87,23 +87,23 @@
   <div class="signature ketua">
     <div class="signature-canvas">
       {{#if ketuaBase64}}
-      <img src="data:image/png;base64,{{ketuaBase64}}" alt="Tanda Tangan Ketua Umum" class="signature-image" />
+      <img src="data:image/png;base64,{{ketuaBase64}}" alt="Tanda Tangan {{jabatanKetua}}" class="signature-image" />
       {{else}}
       <div class="placeholder">[TTD KETUM]</div>
       {{/if}}
     </div>
     <div class="signature-name">{{namaKetua}}</div>
-    <div class="signature-title">Ketua Umum</div>
+    <div class="signature-title">{{jabatanKetua}}</div>
   </div>
   <div class="signature sekretaris">
     <div class="signature-canvas">
       {{#if sekreBase64}}
-      <img src="data:image/png;base64,{{sekreBase64}}" alt="Tanda Tangan Sekretaris Umum" class="signature-image" />
+      <img src="data:image/png;base64,{{sekreBase64}}" alt="Tanda Tangan {{jabatanSekretaris}}" class="signature-image" />
       {{else}}
       <div class="placeholder">[TTD SEKTUM]</div>
       {{/if}}
     </div>
     <div class="signature-name">{{namaSekretaris}}</div>
-    <div class="signature-title">Sekretaris Umum</div>
+    <div class="signature-title">{{jabatanSekretaris}}</div>
   </div>
 </div>

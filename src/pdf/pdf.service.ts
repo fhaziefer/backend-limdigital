@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { StampService } from '../stamp/stamp.service';
 import { formatFullDate } from 'src/utils/date.util';
 import { google, drive_v3 } from 'googleapis';
+import { SignatureService } from 'src/signature/signature.service';
 
 @Injectable()
 export class PdfService {
@@ -22,6 +23,7 @@ export class PdfService {
     constructor(
         private configService: ConfigService,
         private stampService: StampService,
+        private signatureService: SignatureService
     ) {
         this.registerPartials();
         this.initializeDirectories().catch(err => {
@@ -35,7 +37,7 @@ export class PdfService {
                 fs.promises.mkdir(this.pdfDir, { recursive: true }),
                 fs.promises.mkdir(this.imageDir, { recursive: true })
             ]);
-            
+
             this.logger.log('Directories initialized successfully', {
                 pdfDir: this.pdfDir,
                 imageDir: this.imageDir
@@ -51,7 +53,7 @@ export class PdfService {
 
     private async encodeImageToBase64(imagePath: string): Promise<string> {
         const fullPath = path.join(this.assetDir, imagePath);
-        
+
         try {
             await fs.promises.access(fullPath, fs.constants.R_OK);
             const imageBuffer = await fs.promises.readFile(fullPath);
@@ -103,7 +105,7 @@ export class PdfService {
 
             await authClient.authorize();
             this.logger.log('Google Drive service authenticated successfully');
-            
+
             return google.drive({ version: 'v3', auth: authClient });
         } catch (error) {
             this.logger.error('Failed to initialize Google Drive service', {
@@ -123,7 +125,7 @@ export class PdfService {
         try {
             await fs.promises.access(filePath, fs.constants.R_OK);
             const driveService = await this.getDriveService();
-            
+
             const folderId = isPdf
                 ? this.configService.get('GOOGLE_DRIVE_PDF_FOLDER_ID')
                 : this.configService.get('GOOGLE_DRIVE_IMAGE_FOLDER_ID');
@@ -199,21 +201,39 @@ export class PdfService {
             const dateNow = new Date();
             const formattedDate = formatFullDate(dateNow);
             const stampText = `Surat nomor ${data.nomorSurat} resmi diterbitkan oleh ${data.tingkatKepengurusan} Lembaga Ittihadul Muballighin ${data.daerahKepengurusan} pada ${formattedDate}`;
-            
+
             this.logger.log('Generating dynamic stamp');
             const dynamicStampBuffer = await this.stampService.generateQRCodeWithStamp(
-                stampText, 
-                data.tingkatKepengurusan.toUpperCase(), 
+                stampText,
+                data.tingkatKepengurusan.toUpperCase(),
                 data.daerahKepengurusan.toUpperCase()
             );
             const dynamicStampBase64 = dynamicStampBuffer.toString('base64');
+
+            const dynamicSignatureKetuaBuffer = await this.signatureService.generateSignature(
+                data.nomorSurat,
+                data.tingkatKepengurusan,
+                data.daerahKepengurusan,
+                data.jabatanKetua,
+                data.namaKetua
+            );
+            const dynamicSignatureKetuaBase64 = dynamicSignatureKetuaBuffer.toString('base64');
+
+            const dynamicSignatureSekretarisBuffer = await this.signatureService.generateSignature(
+                data.nomorSurat,
+                data.tingkatKepengurusan,
+                data.daerahKepengurusan,
+                data.jabatanSekretaris,
+                data.namaSekretaris
+            );
+            const dynamicSignatureSekretarisBase64 = dynamicSignatureSekretarisBuffer.toString('base64');
 
             // Compile template
             this.logger.log('Compiling template');
             const images = {
                 logoBase64: await this.encodeImageToBase64('images/logo_lim.png'),
-                ketuaBase64: dynamicStampBase64,
-                sekreBase64: dynamicStampBase64,
+                ketuaBase64: dynamicSignatureKetuaBase64,
+                sekreBase64: dynamicSignatureSekretarisBase64,
                 stampBase64: dynamicStampBase64
             };
 
